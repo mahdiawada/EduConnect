@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Room Admin Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <script defer>
+    // Tab switching
+    function showTab(tab) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.getElementById(tab).classList.remove('hidden');
+      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('bg-white', 'font-bold'));
+      document.getElementById(tab + '-btn').classList.add('bg-white', 'font-bold');
+    }
+    // Kick modal
+    let memberToKick = null;
+    function openKickModal(name) {
+      memberToKick = name;
+      document.getElementById('kick-member-name').textContent = name;
+      document.getElementById('kick-modal').classList.remove('hidden');
+    }
+    function closeKickModal() {
+      document.getElementById('kick-modal').classList.add('hidden');
+      memberToKick = null;
+    }
+    function confirmKick() {
+      alert('Kicked ' + memberToKick + ' (static demo)');
+      closeKickModal();
+    }
+    // Group chat modal
+    function openGroupChatModal() {
+      document.getElementById('group-chat-modal').classList.remove('hidden');
+    }
+    function closeGroupChatModal() {
+      document.getElementById('group-chat-modal').classList.add('hidden');
+    }
+    function createGroupChat() {
+      const name = document.getElementById('group-chat-name').value;
+      if (name) alert('Created group chat: ' + name + ' (static demo)');
+      closeGroupChatModal();
+    }
+    // On load, show Members tab
+    window.onload = () => showTab('members');
+  </script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+  <!-- Header -->
+  <div class="bg-white shadow p-4 flex items-center justify-between">
+    <div class="flex items-center gap-2">
+      <a href="room.html" class="text-gray-500 hover:text-blue-600"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg></a>
+      <span class="text-2xl font-bold ml-2">Room Administration</span>
+      <span class="ml-4 text-gray-500">JavaScript Course</span>
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 w-full">
+    <div class="bg-white rounded-lg shadow p-4 flex flex-col items-center w-full">
+      <span class="text-gray-500">Total Members</span>
+      <span class="text-2xl font-bold">3</span>
+    </div>
+    <div class="bg-white rounded-lg shadow p-4 flex flex-col items-center w-full">
+      <span class="text-gray-500">Pending Requests</span>
+      <span class="text-2xl font-bold">2</span>
+    </div>
+    <div class="bg-white rounded-lg shadow p-4 flex flex-col items-center w-full">
+      <span class="text-gray-500">This Week</span>
+      <span class="text-2xl font-bold">12</span>
+      <span class="text-xs text-gray-400">New messages</span>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="p-4">
+    <div class="flex gap-2 mb-4">
+      <button id="members-btn" class="tab-btn px-4 py-2 rounded-t bg-white font-bold" onclick="showTab('members')">Members</button>
+      <button id="pending-btn" class="tab-btn px-4 py-2 rounded-t" onclick="showTab('pending')">Pending Requests <span class="ml-1 bg-red-500 text-white rounded-full px-2 text-xs">2</span></button>
+      <button id="settings-btn" class="tab-btn px-4 py-2 rounded-t" onclick="showTab('settings')">Settings</button>
+    </div>
+    <!-- Members Tab -->
+    <div id="members" class="tab-content bg-white rounded-b shadow p-4">
+      <div class="mb-4 flex justify-between items-center">
+        <div>
+          <h2 class="text-xl font-bold">Member Management</h2>
+          <p class="text-gray-500 text-sm">Manage your room members, send invitations, and control access.</p>
+        </div>
+        <button onclick="openGroupChatModal()" class="bg-black text-white px-4 py-2 rounded flex items-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg> Create Group Chat</button>
+      </div>
+      <div class="mb-4 flex gap-2">
+        <input type="email" placeholder="Enter email address to invite" class="border rounded px-3 py-2 flex-1" />
+        <button class="bg-black text-white px-4 py-2 rounded flex items-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg> Invite</button>
+      </div>
+      <div class="mb-4">
+        <input type="text" placeholder="Search members..." class="border rounded px-3 py-2 w-full" />
+      </div>
+      <table class="w-full text-left">
+        <thead>
+          <tr class="border-b">
+            <th class="py-2">Member</th>
+            <th>Role</th>
+            <th>Join Date</th>
+            <th>Last Active</th>
+            <th>Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="border-b">
+            <td class="py-2 flex items-center gap-2"><span class="inline-block h-8 w-8 rounded-full bg-gray-200"></span> <div><div class="font-bold">Sarah Wilson</div><div class="text-xs text-gray-500">sarah@example.com</div></div></td>
+            <td><span class="bg-gray-100 px-2 py-1 rounded text-xs font-semibold">Admin</span></td>
+            <td>2024-01-15</td>
+            <td>2 hours ago</td>
+            <td><span class="bg-black text-white px-2 py-1 rounded text-xs">Active</span></td>
+            <td></td>
+          </tr>
+          <tr class="border-b">
+            <td class="py-2 flex items-center gap-2"><span class="inline-block h-8 w-8 rounded-full bg-gray-200"></span> <div><div class="font-bold">Mike Johnson</div><div class="text-xs text-gray-500">mike@example.com</div></div></td>
+            <td><span class="bg-gray-100 px-2 py-1 rounded text-xs font-semibold">Student</span></td>
+            <td>2024-01-18</td>
+            <td>1 day ago</td>
+            <td><span class="bg-black text-white px-2 py-1 rounded text-xs">Active</span></td>
+            <td><button onclick="openKickModal('Mike Johnson')" class="text-red-500 hover:text-red-700" title="Kick"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg></button></td>
+          </tr>
+          <tr>
+            <td class="py-2 flex items-center gap-2"><span class="inline-block h-8 w-8 rounded-full bg-gray-200"></span> <div><div class="font-bold">Emma Davis</div><div class="text-xs text-gray-500">emma@example.com</div></div></td>
+            <td><span class="bg-gray-100 px-2 py-1 rounded text-xs font-semibold">Student</span></td>
+            <td>2024-01-20</td>
+            <td>3 days ago</td>
+            <td><span class="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs">Inactive</span></td>
+            <td><button onclick="openKickModal('Emma Davis')" class="text-red-500 hover:text-red-700" title="Kick"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg></button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <!-- Pending Requests Tab -->
+    <div id="pending" class="tab-content bg-white rounded-b shadow p-4 hidden">
+      <h2 class="text-xl font-bold mb-2">Pending Requests</h2>
+      <p class="text-gray-500 mb-4">Approve or deny new member requests.</p>
+      <ul>
+        <li class="flex items-center justify-between border-b py-2">
+          <span>alex@example.com</span>
+          <span>
+            <button class="bg-green-500 text-white px-3 py-1 rounded mr-2">Approve</button>
+            <button class="bg-red-500 text-white px-3 py-1 rounded">Deny</button>
+          </span>
+        </li>
+        <li class="flex items-center justify-between border-b py-2">
+          <span>lisa@example.com</span>
+          <span>
+            <button class="bg-green-500 text-white px-3 py-1 rounded mr-2">Approve</button>
+            <button class="bg-red-500 text-white px-3 py-1 rounded">Deny</button>
+          </span>
+        </li>
+      </ul>
+    </div>
+    <!-- Settings Tab -->
+    <div id="settings" class="tab-content bg-white rounded-b shadow p-4 hidden">
+      <h2 class="text-xl font-bold mb-2">Room Settings</h2>
+      <p class="text-gray-500 mb-4">Configure your room preferences and permissions.</p>
+      <form onsubmit="event.preventDefault(); alert('Room updated (static demo)')">
+        <div class="mb-4">
+          <label class="block font-semibold mb-1">Room Name</label>
+          <input type="text" class="border rounded px-3 py-2 w-full" value="JavaScript Course" />
+        </div>
+        <div class="mb-4">
+          <label class="block font-semibold mb-1">Description</label>
+          <input type="text" class="border rounded px-3 py-2 w-full" value="Learn modern JavaScript concepts and frameworks" />
+        </div>
+        <button type="submit" class="bg-black text-white px-4 py-2 rounded">Save Changes</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Kick Confirmation Modal -->
+  <div id="kick-modal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded shadow p-6 w-full max-w-sm">
+      <h3 class="text-lg font-bold mb-2">Remove Member</h3>
+      <p class="mb-4">Are you sure you want to remove <span id="kick-member-name" class="font-semibold"></span> from the room?</p>
+      <div class="flex justify-end gap-2">
+        <button onclick="closeKickModal()" class="px-4 py-2 rounded bg-gray-200">Cancel</button>
+        <button onclick="confirmKick()" class="px-4 py-2 rounded bg-red-600 text-white">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create Group Chat Modal -->
+  <div id="group-chat-modal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded shadow p-6 w-full max-w-sm">
+      <h3 class="text-lg font-bold mb-2">Create New Group Chat</h3>
+      <form onsubmit="event.preventDefault(); createGroupChat();">
+        <div class="mb-4">
+          <label class="block font-semibold mb-1">Group Chat Name</label>
+          <input id="group-chat-name" type="text" class="border rounded px-3 py-2 w-full" required />
+        </div>
+        <div class="flex justify-end gap-2">
+          <button type="button" onclick="closeGroupChatModal()" class="px-4 py-2 rounded bg-gray-200">Cancel</button>
+          <button type="submit" class="px-4 py-2 rounded bg-blue-600 text-white">Create</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</body>
+</html> 

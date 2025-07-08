@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Log In | EduConnect</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col">
+  <!-- Nav (optional, minimal) -->
+  <nav class="bg-white border-b border-gray-200 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center">
+      <span class="text-2xl font-bold text-blue-600">EduConnect</span>
+    </div>
+  </nav>
+
+  <!-- Login Form -->
+  <main class="flex-1 flex items-center justify-center py-12 px-4">
+    <div class="w-full max-w-md bg-white rounded-xl shadow-lg p-8">
+      <h2 class="text-2xl font-extrabold text-gray-900 mb-2 text-center">Welcome Back</h2>
+      <p class="text-center text-gray-500 text-sm mb-6">Log in to your account to continue learning and teaching</p>
+      <form class="space-y-5">
+        <div>
+          <label for="email" class="block text-sm font-semibold text-gray-700">Email</label>
+          <input id="email" name="email" type="email" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-600 focus:border-blue-600">
+        </div>
+        <div>
+          <label for="password" class="block text-sm font-semibold text-gray-700">Password</label>
+          <input id="password" name="password" type="password" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-600 focus:border-blue-600">
+        </div>
+        <button type="submit" class="w-full bg-blue-600 text-white font-semibold py-2 rounded-md shadow hover:bg-blue-700 transition">Log In</button>
+      </form>
+      <p class="mt-6 text-center text-sm text-gray-600">
+        Don't have an account?
+        <a href="register.html" class="text-blue-600 hover:underline font-medium">Sign up</a>
+      </p>
+    </div>
+  </main>
+</body>
+</html> 

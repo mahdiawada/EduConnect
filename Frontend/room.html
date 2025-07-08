@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JavaScript Course | EduConnect</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+  <div class="flex h-screen">
+    <!-- Sidebar (responsive) -->
+    <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 w-72 bg-white border-r border-gray-400 flex flex-col transform -translate-x-full transition-transform duration-200 ease-in-out md:relative md:translate-x-0 md:w-80 md:z-0 md:flex md:h-full">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-400">
+        <div class="flex items-center space-x-2">
+          <span class="text-2xl">📖</span>
+          <span class="font-bold text-lg">JavaScript Course</span>
+        </div>
+        <!-- Close button for mobile -->
+        <button id="closeSidebar" class="md:hidden absolute top-4 right-4 text-2xl text-gray-400 hover:text-gray-700 font-bold hidden">&times;</button>
+      </div>
+      <div class="px-6 py-4">
+        <button class="w-full bg-black text-white font-medium py-2 rounded-lg shadow hover:bg-gray-900 transition mb-6">Start Meeting</button>
+        <div class="mb-6">
+          <div class="text-xs font-bold text-gray-500 mb-2">GROUP CHATS</div>
+          <ul class="space-y-1">
+            <li>
+              <a href="#" class="flex items-center px-3 py-2 rounded-lg bg-blue-50 text-blue-700 font-semibold justify-between">
+                <span><span class="mr-2">#</span>General Discussion</span>
+                <span class="bg-red-500 text-white text-xs font-semibold px-2 py-0.5 rounded-full">5</span>
+              </a>
+            </li>
+            <li>
+              <a href="#" class="flex items-center px-3 py-2 rounded-lg hover:bg-gray-100 transition justify-between">
+                <span><span class="mr-2">#</span>Assignment Help</span>
+              </a>
+            </li>
+            <li>
+              <a href="#" class="flex items-center px-3 py-2 rounded-lg hover:bg-gray-100 transition justify-between">
+                <span><span class="mr-2">#</span>Project Teams</span>
+                <span class="bg-red-500 text-white text-xs font-semibold px-2 py-0.5 rounded-full">2</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+        <div>
+          <div class="text-xs font-bold text-gray-500 mb-2">MEMBERS (4)</div>
+          <ul class="space-y-2">
+            <li class="flex items-center space-x-2">
+              <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+              <span class="font-semibold text-gray-900">John Doe</span>
+              <span class="text-xs text-gray-500 ml-2">Instructor</span>
+            </li>
+            <li class="flex items-center space-x-2">
+              <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+              <span class="text-gray-900">Sarah Wilson</span>
+              <span class="text-xs text-gray-500 ml-2">Student</span>
+            </li>
+            <li class="flex items-center space-x-2">
+              <span class="w-2 h-2 bg-yellow-400 rounded-full"></span>
+              <span class="text-gray-900">Mike Johnson</span>
+              <span class="text-xs text-gray-500 ml-2">Student</span>
+            </li>
+            <li class="flex items-center space-x-2">
+              <span class="w-2 h-2 bg-gray-300 rounded-full"></span>
+              <span class="text-gray-900">Emma Davis</span>
+              <span class="text-xs text-gray-500 ml-2">Student</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </aside>
+    <!-- Main Chat Area -->
+    <main class="flex-1 flex flex-col">
+      <!-- Chat Header -->
+      <div class="flex items-center justify-between px-4 sm:px-8 py-6 border-b border-gray-400 bg-white">
+        <div class="flex items-center space-x-3">
+          <!-- Sidebar toggle button (mobile) -->
+          <button id="openSidebar" class="md:hidden mr-2 text-2xl text-gray-500 hover:text-gray-700 focus:outline-none">
+            &#9776;
+          </button>
+          <span class="text-2xl">#</span>
+          <span class="font-bold text-xl">General Discussion</span>
+        </div>
+        <div class="flex items-center space-x-3">
+          <!-- Chat header actions -->
+          <a href="admin-dashboard.html" class="p-2 rounded hover:bg-gray-100 transition" title="Room Settings">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M11.25 2.25c.966-1.285 2.534-1.285 3.5 0l.548.73a2.25 2.25 0 002.682.832l.857-.343c1.5-.6 2.964.864 2.364 2.364l-.343.857a2.25 2.25 0 00.832 2.682l.73.548c1.285.966 1.285 2.534 0 3.5l-.73.548a2.25 2.25 0 00-.832 2.682l.343.857c.6 1.5-.864 2.964-2.364 2.364l-.857-.343a2.25 2.25 0 00-2.682.832l-.548.73c-.966 1.285-2.534 1.285-3.5 0l-.548-.73a2.25 2.25 0 00-2.682-.832l-.857.343c-1.5.6-2.964-.864-2.364-2.364l.343-.857a2.25 2.25 0 00-.832-2.682l-.73-.548c-1.285-.966-1.285-2.534 0-3.5l.73-.548a2.25 2.25 0 00.832-2.682l-.343-.857c-.6-1.5.864-2.964 2.364-2.364l.857.343a2.25 2.25 0 002.682-.832l.548-.73z" />
+              <circle cx="12" cy="12" r="3" />
+            </svg>
+          </a>
+        </div>
+      </div>
+      <!-- Chat Messages -->
+      <div class="flex-1 overflow-y-auto px-8 py-6 bg-gray-50">
+        <div class="space-y-6">
+          <div class="flex items-start space-x-4">
+            <div class="w-10 h-10 bg-gray-200 rounded-full"></div>
+            <div>
+              <div class="flex items-center space-x-2 mb-1">
+                <span class="font-bold text-gray-900">John Doe</span>
+                <span class="bg-gray-100 text-gray-700 text-xs font-semibold px-2 py-0.5 rounded">Instructor</span>
+                <span class="text-xs text-gray-400">10:30 AM</span>
+              </div>
+              <div>Welcome everyone to our JavaScript course! Let's start with the basics.</div>
+            </div>
+          </div>
+          <div class="flex items-start space-x-4">
+            <div class="w-10 h-10 bg-gray-200 rounded-full"></div>
+            <div>
+              <div class="flex items-center space-x-2 mb-1">
+                <span class="font-bold text-gray-900">Sarah Wilson</span>
+                <span class="text-xs text-gray-400">10:32 AM</span>
+              </div>
+              <div>Thank you! I'm excited to learn.</div>
+            </div>
+          </div>
+          <div class="flex items-start space-x-4">
+            <div class="w-10 h-10 bg-gray-200 rounded-full"></div>
+            <div>
+              <div class="flex items-center space-x-2 mb-1">
+                <span class="font-bold text-gray-900">Mike Johnson</span>
+                <span class="text-xs text-gray-400">10:35 AM</span>
+              </div>
+              <div>When will we cover React?</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Chat Input -->
+      <div class="px-8 py-4 bg-white border-t border-gray-400 flex items-center">
+        <input type="text" placeholder="Message #general-discussion" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-blue-600 focus:border-blue-600">
+        <button class="ml-2 p-2 rounded bg-gray-200 hover:bg-gray-300 transition" title="Send">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M12 5l7 7-7 7" /></svg>
+        </button>
+      </div>
+    </main>
+  </div>
+  <!-- Overlay for sidebar on mobile -->
+  <div id="sidebarOverlay" class="fixed inset-0 z-30 bg-black bg-opacity-30 hidden md:hidden"></div>
+  <script>
+    const sidebar = document.getElementById('sidebar');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
+    const openSidebar = document.getElementById('openSidebar');
+    const closeSidebar = document.getElementById('closeSidebar');
+    function showSidebar() {
+      sidebar.classList.remove('-translate-x-full');
+      sidebarOverlay.classList.remove('hidden');
+      closeSidebar.classList.remove('hidden');
+    }
+    function hideSidebar() {
+      sidebar.classList.add('-translate-x-full');
+      sidebarOverlay.classList.add('hidden');
+      closeSidebar.classList.add('hidden');
+    }
+    openSidebar && openSidebar.addEventListener('click', showSidebar);
+    closeSidebar && closeSidebar.addEventListener('click', hideSidebar);
+    sidebarOverlay && sidebarOverlay.addEventListener('click', hideSidebar);
+    // Hide sidebar on resize to desktop
+    window.addEventListener('resize', () => {
+      if (window.innerWidth >= 768) {
+        hideSidebar();
+      }
+    });
+  </script>
+</body>
+</html> 
