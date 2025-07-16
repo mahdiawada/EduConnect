@@ -2,17 +2,15 @@ import { id } from "../repositories/IRepository";
 import { User } from "../models/User.model";
 import { createUserRepository, UserRepository } from "../repositories/PostgreSQL/User.repository";
 import bcrypt from "bcrypt";
+import { NotFoundException } from "../utils/exceptions/http/NotFoundException";
 
 export class UserService {
     private userRepo?: UserRepository;
-    private readonly SALT_ROUNDS = 12; // Industry standard for bcrypt
+    private readonly SALT_ROUNDS = 10; 
 
-    // create user with password hashing
     public async createUser(user: User): Promise<id> {
-        // Hash the password before creating the user
         const hashedPassword = await this.hashPassword(user.getPassword());
         
-        // Create a new user object with the hashed password
         const userWithHashedPassword = new User(
             user.getId(),
             user.getUsername(),
@@ -53,13 +51,13 @@ export class UserService {
     async validateUser(email: string, password: string): Promise<id> {  
         const user = await (await this.getRepo()).getByEmail(email);
         if (!user) {
-            throw new Error("User not found");
+            throw new NotFoundException("User not found");
         }
         
         // Compare the provided password with the stored hash
         const isValidPassword = await this.comparePassword(password, user.getPasswordHash());
         if (!isValidPassword) {
-            throw new Error("Invalid password");
+            throw new NotFoundException("Invalid password");
         }
         
         return user.getId();

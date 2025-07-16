@@ -4,8 +4,6 @@ export class Room {
     private description?: string;
     private instructorId: string;
     private inviteCode: string;
-    private isPublic: boolean;
-    private maxParticipants: number;
     private isActive: boolean;
     private createdAt: Date;
     private updatedAt: Date;
@@ -16,8 +14,6 @@ export class Room {
         instructorId: string,
         inviteCode: string,
         description?: string,
-        isPublic: boolean = false,
-        maxParticipants: number = 50,
         isActive: boolean = true,
         createdAt?: Date,
         updatedAt?: Date
@@ -27,8 +23,6 @@ export class Room {
         this.description = description;
         this.instructorId = instructorId;
         this.inviteCode = inviteCode;
-        this.isPublic = isPublic;
-        this.maxParticipants = maxParticipants;
         this.isActive = isActive;
         this.createdAt = createdAt || new Date();
         this.updatedAt = updatedAt || new Date();
@@ -55,13 +49,6 @@ export class Room {
         return this.inviteCode;
     }
 
-    getIsPublic(): boolean {
-        return this.isPublic;
-    }
-
-    getMaxParticipants(): number {
-        return this.maxParticipants;
-    }
 
     getIsActive(): boolean {
         return this.isActive;
@@ -96,15 +83,6 @@ export class Room {
         this.updatedAt = new Date();
     }
 
-    setIsPublic(isPublic: boolean): void {
-        this.isPublic = isPublic;
-        this.updatedAt = new Date();
-    }
-
-    setMaxParticipants(maxParticipants: number): void {
-        this.maxParticipants = maxParticipants;
-        this.updatedAt = new Date();
-    }
 
     setIsActive(isActive: boolean): void {
         this.isActive = isActive;
@@ -116,20 +94,26 @@ export class Room {
         return this.isActive;
     }
 
-    isFull(currentParticipants: number): boolean {
-        return currentParticipants >= this.maxParticipants;
-    }
-
     canBeJoinedByInvite(): boolean {
-        return this.isActive && !this.isPublic;
-    }
-
-    canBeJoinedPublicly(): boolean {
-        return this.isActive && this.isPublic;
+        return this.isActive;
     }
 
     // For backward compatibility
     getOwnerId(): string {
         return this.instructorId;
+    }
+
+    // Convert to plain object for JSON serialization
+    toJSON() {
+        return {
+            id: this.id,
+            name: this.name,
+            description: this.description,
+            instructorId: this.instructorId,
+            inviteCode: this.inviteCode,
+            isActive: this.isActive,
+            createdAt: this.createdAt,
+            updatedAt: this.updatedAt
+        };
     }
 }

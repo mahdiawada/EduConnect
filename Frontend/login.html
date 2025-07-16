@@ -10,7 +10,7 @@
   <!-- Nav (optional, minimal) -->
   <nav class="bg-white border-b border-gray-200 shadow-sm">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center">
-      <span class="text-2xl font-bold text-blue-600">EduConnect</span>
+      <a href="index.html" class="text-2xl font-bold text-blue-600">EduConnect</a>
     </div>
   </nav>
 
@@ -19,7 +19,24 @@
     <div class="w-full max-w-md bg-white rounded-xl shadow-lg p-8">
       <h2 class="text-2xl font-extrabold text-gray-900 mb-2 text-center">Welcome Back</h2>
       <p class="text-center text-gray-500 text-sm mb-6">Log in to your account to continue learning and teaching</p>
-      <form class="space-y-5">
+      
+      <!-- Error Message -->
+      <div id="errorMessage" class="hidden bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
+        <span id="errorText"></span>
+      </div>
+      
+      <!-- Loading State -->
+      <div id="loadingMessage" class="hidden bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded mb-4">
+        <span class="flex items-center">
+          <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-blue-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          Logging in...
+        </span>
+      </div>
+      
+      <form id="loginForm" class="space-y-5">
         <div>
           <label for="email" class="block text-sm font-semibold text-gray-700">Email</label>
           <input id="email" name="email" type="email" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-600 focus:border-blue-600">
@@ -28,7 +45,9 @@
           <label for="password" class="block text-sm font-semibold text-gray-700">Password</label>
           <input id="password" name="password" type="password" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-600 focus:border-blue-600">
         </div>
-        <button type="submit" class="w-full bg-blue-600 text-white font-semibold py-2 rounded-md shadow hover:bg-blue-700 transition">Log In</button>
+        <button type="submit" id="loginButton" class="w-full bg-blue-600 text-white font-semibold py-2 rounded-md shadow hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed">
+          Log In
+        </button>
       </form>
       <p class="mt-6 text-center text-sm text-gray-600">
         Don't have an account?
@@ -36,5 +55,98 @@
       </p>
     </div>
   </main>
+
+  <script>
+    // API Base URL - Change this to your backend URL
+    const API_BASE = 'http://localhost:3000';
+    
+    // Get form elements
+    const loginForm = document.getElementById('loginForm');
+    const errorMessage = document.getElementById('errorMessage');
+    const errorText = document.getElementById('errorText');
+    const loadingMessage = document.getElementById('loadingMessage');
+    const loginButton = document.getElementById('loginButton');
+    
+    // Check if user is already logged in
+    if (localStorage.getItem('token')) {
+      window.location.href = 'dashboard.html';
+    }
+    
+    // Show error message
+    function showError(message) {
+      errorText.textContent = message;
+      errorMessage.classList.remove('hidden');
+      loadingMessage.classList.add('hidden');
+      loginButton.disabled = false;
+    }
+    
+    // Hide error message
+    function hideError() {
+      errorMessage.classList.add('hidden');
+    }
+    
+    // Show loading state
+    function showLoading() {
+      hideError();
+      loadingMessage.classList.remove('hidden');
+      loginButton.disabled = true;
+    }
+    
+    // Hide loading state
+    function hideLoading() {
+      loadingMessage.classList.add('hidden');
+      loginButton.disabled = false;
+    }
+    
+    // Handle form submission
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const formData = new FormData(loginForm);
+      const email = formData.get('email').trim();
+      const password = formData.get('password');
+      
+      // Basic validation
+      if (!email || !password) {
+        showError('Please fill in all fields');
+        return;
+      }
+      
+      showLoading();
+      
+      try {
+        const response = await fetch(`${API_BASE}/auth/login`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email, password })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+          // Store authentication token
+          localStorage.setItem('token', data.token);
+          
+          // Store user info if provided
+          if (data.user) {
+            localStorage.setItem('user', JSON.stringify(data.user));
+          }
+          
+          // Redirect to dashboard
+          window.location.href = 'dashboard.html';
+        } else {
+          // Show error message
+          showError(data.error || 'Login failed. Please try again.');
+        }
+      } catch (error) {
+        console.error('Login error:', error);
+        showError('Network error. Please check your connection and try again.');
+      } finally {
+        hideLoading();
+      }
+    });
+  </script>
 </body>
 </html> 

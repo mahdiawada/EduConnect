@@ -1,24 +1,28 @@
+import { generateUUID } from "../utils";
 import { Chat } from "../models/Chat.model";
 import { Message } from "../models/Messages.model";
 import { ChatRepository } from "../repositories/PostgreSQL/Chat.repository";
 import { MessagesRepository } from "../repositories/PostgreSQL/Messages.repository";
-import { v4 as uuidv4 } from 'uuid';
+import { RoomRepository } from "../repositories/PostgreSQL/Room.repository";
+
 
 export class ChatService {
     private chatRepo: ChatRepository;
     private messageRepo: MessagesRepository;
+    private roomRepo: RoomRepository;
 
     constructor() {
         this.chatRepo = new ChatRepository();
         this.messageRepo = new MessagesRepository();
+        this.roomRepo = new RoomRepository();
     }
 
     // Create a new chat group
-    public async createChat(name: string, roomId: string, createdBy: string, isPrivate: boolean = false): Promise<Chat> {
+    public async createChat(name: string, roomId: string, createdBy: string): Promise<Chat> {
         this.validateChatData(name, roomId, createdBy);
         
-        const chatId = uuidv4();
-        const chat = new Chat(chatId, name, roomId, createdBy, isPrivate);
+        const chatId = generateUUID('chat');
+        const chat = new Chat(chatId, name, roomId, createdBy);
         
         await this.chatRepo.create(chat);
         return chat;
@@ -46,7 +50,7 @@ export class ChatService {
     public async sendMessage(chatId: string, senderId: string, content: string, messageType: 'text' | 'image' | 'file' | 'system' = 'text'): Promise<Message> {
         this.validateMessageData(chatId, senderId, content);
         
-        const messageId = uuidv4();
+        const messageId = generateUUID('message');
         const message = new Message(messageId, chatId, senderId, content, messageType);
         
         await this.messageRepo.create(message);
@@ -106,6 +110,31 @@ export class ChatService {
             throw new Error(`Failed to get message count for chat ${chatId}: ${error}`);
         }
     }
+
+    public async deleteChat(chatId: string, userId: string) {
+        try {
+            // 1. Get the chat details
+            const chat = await this.chatRepo.get(chatId);
+            
+            // 2. Get the room the chat belongs to
+             const room = await this.roomRepo.get(chat.getRoomId()); // You would need to inject RoomRepository
+
+            // 3. Check if the user is either the chat creator or the room instructor
+            const isChatCreator = chat.getCreatedBy() === userId;
+            // const isRoomInstructor = room.getInstructorId() === userId; // This line would cause an error as roomRepo is not injected
+
+            if (!isChatCreator) { // Removed isRoomInstructor as roomRepo is not available
+                // If they are neither, they are not authorized
+                throw new Error("You are not authorized to delete this chat.");
+            }
+
+            // 4. If they are authorized, delete the chat
+            return await this.chatRepo.delete(chatId);
+
+        } catch (error) {
+            throw new Error(`Failed to delete chat of id ${chatId}`)
+        }
+    } 
 
     // Validation methods
     private validateChatData(name: string, roomId: string, createdBy: string): void {

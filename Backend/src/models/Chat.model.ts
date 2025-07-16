@@ -3,7 +3,6 @@ export class Chat {
     private name: string;
     private roomId: string;
     private createdBy: string;
-    private isPrivate: boolean;
     private createdAt: Date;
     private updatedAt: Date;
 
@@ -12,7 +11,6 @@ export class Chat {
         name: string,
         roomId: string,
         createdBy: string,
-        isPrivate: boolean = false,
         createdAt?: Date,
         updatedAt?: Date
     ) {
@@ -20,7 +18,6 @@ export class Chat {
         this.name = name;
         this.roomId = roomId;
         this.createdBy = createdBy;
-        this.isPrivate = isPrivate;
         this.createdAt = createdAt || new Date();
         this.updatedAt = updatedAt || new Date();
     }
@@ -42,10 +39,6 @@ export class Chat {
         return this.createdBy;
     }
 
-    getIsPrivate(): boolean {
-        return this.isPrivate;
-    }
-
     getCreatedAt(): Date {
         return this.createdAt;
     }
@@ -65,26 +58,11 @@ export class Chat {
         this.updatedAt = new Date();
     }
 
-    setIsPrivate(isPrivate: boolean): void {
-        this.isPrivate = isPrivate;
-        this.updatedAt = new Date();
-    }
-
 
     // Business logic methods
     canBeAccessedBy(userId: string, isInstructor: boolean): boolean {
-        
-        if (!this.isPrivate) return true;
         // For private chats, only the creator and instructors can access
         return this.createdBy === userId || isInstructor;
-    }
-
-    isPublicChat(): boolean {
-        return !this.isPrivate;
-    }
-
-    isPrivateChat(): boolean {
-        return this.isPrivate;
     }
 
 }

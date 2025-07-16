@@ -7,13 +7,11 @@ import { PostgresRoom, RoomMapper } from "../../mappers/Room.mapper";
 
 const CREATE_TABLE = `
 CREATE TABLE IF NOT EXISTS rooms (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id VARCHAR(250) PRIMARY KEY ,
     name VARCHAR(100) NOT NULL,
     description TEXT,
     instructor_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     invite_code VARCHAR(20) UNIQUE NOT NULL,
-    is_public BOOLEAN DEFAULT false,
-    max_participants INTEGER DEFAULT 50,
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -21,16 +19,15 @@ CREATE TABLE IF NOT EXISTS rooms (
 `
 const INSERT_ROOM = `
 INSERT INTO rooms (
+    id,
     name,
     description,
     instructor_id,
     invite_code,
-    is_public,
-    max_participants,
     is_active
 ) VALUES (
-    $1, $2, $3, $4, $5, $6, $7
-) RETURNING id;
+    $1, $2, $3, $4, $5, $6
+)
 `;
 
 const GET_ROOM = `
@@ -48,23 +45,22 @@ SET
     description = $2,
     instructor_id = $3,
     invite_code = $4,
-    is_public = $5,
-    max_participants = $6,
-    is_active = $7,
+    is_active = $5,
     updated_at = CURRENT_TIMESTAMP
-WHERE id = $8;
+WHERE id = $6;
 `;
 
 const DELETE_ROOM = `
 DELETE FROM rooms WHERE id = $1;
 `;
 
-const GET_PUBLIC_ROOMS = `
-SELECT * FROM rooms WHERE is_public = true AND is_active = true;
-`;
 
 const GET_ROOM_BY_INVITE_CODE = `
 SELECT * FROM rooms WHERE invite_code = $1;
+`;
+
+const GET_ROOMS_BY_INSTRUCTOR = `
+SELECT * FROM rooms WHERE instructor_id = $1 ORDER BY created_at DESC;
 `;
 
 export class RoomRepository implements IRepository<Room>, Initializable {
@@ -82,17 +78,16 @@ export class RoomRepository implements IRepository<Room>, Initializable {
     async create(room: Room): Promise<id> {
         try {
             const pool = await ConnectionManager.getConnection();
-            const result = await pool.query(INSERT_ROOM, [
+            await pool.query(INSERT_ROOM, [
+                room.getId(),
                 room.getName(),
                 room.getDescription(),
                 room.getInstructorId(),
                 room.getInviteCode(),
-                room.getIsPublic(),
-                room.getMaxParticipants(),
                 room.getIsActive()
             ]);
             logger.info("Room Inserted");
-            return result.rows[0].id;
+            return room.getId();
         } catch (error) {
             logger.error("Error creating room:", error);
             throw new Error("Failed to create room.");
@@ -130,6 +125,23 @@ export class RoomRepository implements IRepository<Room>, Initializable {
             throw new Error("Failed to get all rooms");
         }
     }
+
+    async getRoomsByInstructorId(instructorId: string): Promise<Room[]> {
+        try {
+            const pool = await ConnectionManager.getConnection();
+            const result = await pool.query(GET_ROOMS_BY_INSTRUCTOR, [instructorId]);
+            if (result.rows.length === 0) {
+                logger.info(`No rooms found for instructor ${instructorId}`);
+                return [];
+            }
+            const mapper = new RoomMapper();
+            return result.rows.map((room: PostgresRoom) => mapper.map(room));
+        } catch (error) {
+            logger.error(`Failed to get rooms for instructor ${instructorId}:`, error);
+            throw new Error(`Failed to get rooms for instructor ${instructorId}`);
+        }
+    }
+
     async update(room: Room): Promise<void> {
         try {
             const pool = await ConnectionManager.getConnection();
@@ -138,8 +150,6 @@ export class RoomRepository implements IRepository<Room>, Initializable {
                 room.getDescription(),
                 room.getInstructorId(),
                 room.getInviteCode(),
-                room.getIsPublic(),
-                room.getMaxParticipants(),
                 room.getIsActive(),
                 room.getId()
             ]);
@@ -159,7 +169,6 @@ export class RoomRepository implements IRepository<Room>, Initializable {
             logger.info(`Room of id ${id} is deleted successfully`); 
         } catch (error) {
             logger.error(`Failed to delete room with id ${id}:`, error);
-            // Re-throw the original error if it's a "not found" error
             if (error instanceof Error && error.message.includes('not found')) {
                 throw error;
             }
@@ -167,20 +176,6 @@ export class RoomRepository implements IRepository<Room>, Initializable {
         }
     }
 
-    async getPublicRooms(): Promise<Room[]> {
-        try {
-            const pool = await ConnectionManager.getConnection();
-            const result = await pool.query(GET_PUBLIC_ROOMS);
-            if (result.rows.length === 0) {
-                return [];
-            }
-            const mapper = new RoomMapper();
-            return result.rows.map((room: PostgresRoom) => mapper.map(room));
-        } catch (error) {
-            logger.error("Failed to get public rooms:", error);
-            throw new Error("Failed to get public rooms");
-        }
-    }
 
     async getByInviteCode(inviteCode: string): Promise<Room> {
         try {
@@ -198,4 +193,12 @@ export class RoomRepository implements IRepository<Room>, Initializable {
             throw new Error(`Failed to get room by invite code ${inviteCode}`);
         }
     }
+
+    
+}
+
+export async function createRoomRepository(): Promise<RoomRepository> {
+    const userRepository = new RoomRepository();
+    await userRepository.init();
+    return userRepository;
 }

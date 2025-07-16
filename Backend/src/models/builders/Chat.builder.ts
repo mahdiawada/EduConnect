@@ -6,7 +6,6 @@ export class ChatBuilder {
     private name!: string;
     private roomId!: string;
     private createdBy!: string;
-    private isPrivate: boolean = false;
     private createdAt?: Date;
     private updatedAt?: Date;
 
@@ -30,10 +29,6 @@ export class ChatBuilder {
         return this;
     }
 
-    setIsPrivate(isPrivate: boolean): ChatBuilder {
-        this.isPrivate = isPrivate;
-        return this;
-    }
 
     setCreatedAt(createdAt: Date): ChatBuilder {
         this.createdAt = createdAt;
@@ -65,7 +60,6 @@ export class ChatBuilder {
             this.name,
             this.roomId,
             this.createdBy,
-            this.isPrivate,
             this.createdAt,
             this.updatedAt
         );

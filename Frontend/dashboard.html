@@ -11,18 +11,41 @@
   <nav class="bg-white border-b border-gray-200 shadow-sm">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
       <!-- Logo -->
-      <span class="text-2xl font-bold text-blue-600">EduConnect</span>
+      <a href="index.html" class="text-2xl font-bold text-blue-600">EduConnect</a>
       <!-- User Avatar and Logout -->
       <div class="flex items-center space-x-4">
-        <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="User Avatar" class="w-10 h-10 rounded-full border-2 border-blue-200 object-cover">
-        <button class="bg-blue-600 text-white font-medium px-4 py-2 rounded shadow hover:bg-blue-700 transition">Logout</button>
+        <div class="flex items-center space-x-2">
+          <img id="userAvatar" src="https://randomuser.me/api/portraits/men/32.jpg" alt="User Avatar" class="w-10 h-10 rounded-full border-2 border-blue-200 object-cover">
+        </div>
+        <button id="logoutBtn" class="bg-red-600 text-white font-medium px-4 py-2 rounded shadow hover:bg-red-700 transition">Logout</button>
       </div>
     </div>
   </nav>
-  <main class="flex-1">
+
+  <!-- Loading Screen -->
+  <div id="loadingScreen" class="flex-1 flex items-center justify-center">
+    <div class="text-center">
+      <svg class="animate-spin -ml-1 mr-3 h-10 w-10 text-blue-700 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
+      <p class="text-gray-600 mt-2">Loading your dashboard...</p>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <main id="mainContent" class="flex-1 hidden">
     <div class="max-w-3xl mx-auto px-4 mt-12">
-      <h1 class="text-4xl font-bold text-gray-900">Welcome back, User!</h1>
-      <p class="mt-2 text-gray-600 text-xl font-normal">Manage your educational rooms and connect with your students.</p>
+      <div class="mb-6">
+        <h1 id="welcomeMessage" class="text-4xl font-bold text-gray-900">Welcome back!</h1>
+        <p class="mt-2 text-gray-600 text-xl font-normal">Manage your educational rooms and connect with your students.</p>
+      </div>
+
+      <!-- Error Message -->
+      <div id="errorMessage" class="hidden bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6">
+        <span id="errorText"></span>
+      </div>
+
       <!-- Dashboard Stats Cards -->
       <div class="mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <!-- Card 1: Create Room -->
@@ -32,23 +55,24 @@
           <div class="text-gray-500 text-sm">Start a new course</div>
           <button class="bg-blue-600 text-white font-medium px-4 py-1 rounded shadow hover:bg-blue-700 transition text-sm openCreateRoomModal mt-4">Create Room</button>
         </div>
-        <!-- Card 2: Students -->
+        <!-- Card 2: Join Room -->
         <div class="bg-white border border-gray-200 rounded-xl p-6 flex flex-col items-center text-center">
-          <div class="text-4xl text-green-600 mb-2">&#128101;</div>
-          <div class="font-bold text-lg mb-1">74 Students</div>
-          <div class="text-gray-500 text-sm">Across all rooms</div>
+          <div class="text-4xl text-green-600 mb-2">📥</div>
+          <div class="font-bold text-lg mb-1">Join Room</div>
+          <div class="text-gray-500 text-sm">Enter invite code</div>
+          <button class="bg-green-600 text-white font-medium px-4 py-1 rounded shadow hover:bg-green-700 transition text-sm openJoinRoomModal mt-4">Join Room</button>
         </div>
-        <!-- Card 3: Messages -->
+        <!-- Card 3: Your Rooms -->
         <div class="bg-white border border-gray-200 rounded-xl p-6 flex flex-col items-center text-center">
-          <div class="text-4xl text-purple-600 mb-2">&#128172;</div>
-          <div class="font-bold text-lg mb-1">17 Messages</div>
-          <div class="text-gray-500 text-sm">Unread today</div>
+          <div class="text-4xl text-purple-600 mb-2">🏫</div>
+          <div class="font-bold text-lg mb-1"><span id="roomCount">0</span> Rooms</div>
+          <div class="text-gray-500 text-sm">Created & joined</div>
         </div>
-        <!-- Card 4: Meetings -->
+        <!-- Card 4: Messages -->
         <div class="bg-white border border-gray-200 rounded-xl p-6 flex flex-col items-center text-center">
-          <div class="text-4xl text-red-600 mb-2">&#128249;</div>
-          <div class="font-bold text-lg mb-1">3 Meetings</div>
-          <div class="text-gray-500 text-sm">Scheduled this week</div>
+          <div class="text-4xl text-red-600 mb-2">💬</div>
+          <div class="font-bold text-lg mb-1">Messages</div>
+          <div class="text-gray-500 text-sm">Chat in rooms</div>
         </div>
       </div>
 
@@ -56,66 +80,65 @@
       <div class="mt-16">
         <div class="flex items-center justify-between mb-6">
           <h2 class="text-2xl font-bold text-gray-900">Your Rooms</h2>
-          <button class="flex items-center bg-black text-white font-medium px-5 py-2 rounded-lg shadow hover:bg-gray-900 transition text-base openCreateRoomModal">
-            <span class="text-xl mr-2">+</span> Create New Room
-          </button>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <!-- Room Card 1 -->
-          <div class="bg-white border border-gray-200 rounded-xl p-6 flex flex-col">
-            <div class="flex items-center mb-2">
-              <span class="font-bold text-lg mr-2">Advanced JavaScript Course</span>
-              <span class="ml-auto bg-gray-100 text-gray-700 text-xs font-semibold px-3 py-1 rounded-full">Owner</span>
-            </div>
-            <div class="text-gray-500 text-sm mb-4">Learn modern JavaScript concepts and frameworks</div>
-            <div class="flex items-center text-gray-500 text-sm mb-4">
-              <span class="flex items-center mr-4"><span class="text-lg mr-1">&#128101;</span>24</span>
-              <span class="ml-auto">2 hours ago</span>
-            </div>
-            <div class="flex items-center mt-auto">
-              <a href="room.html" class="flex-1 border border-gray-300 rounded-md px-4 py-2 font-medium hover:bg-gray-50 transition text-center">Enter Room</a>
-              <button class="ml-2 p-2 rounded hover:bg-gray-100 transition" title="Room Settings">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
-              </button>
-            </div>
-          </div>
-          <!-- Room Card 2 -->
-          <div class="bg-white border border-gray-200 rounded-xl p-6 flex flex-col">
-            <div class="flex items-center mb-2">
-              <span class="font-bold text-lg mr-2">React Fundamentals</span>
-              <span class="ml-auto bg-gray-100 text-gray-700 text-xs font-semibold px-3 py-1 rounded-full">Owner</span>
-            </div>
-            <div class="text-gray-500 text-sm mb-4">Master the basics of React development</div>
-            <div class="flex items-center text-gray-500 text-sm mb-4">
-              <span class="flex items-center mr-4"><span class="text-lg mr-1">&#128101;</span>18</span>
-              <span class="ml-auto">1 day ago</span>
-            </div>
-            <div class="flex items-center mt-auto">
-              <a href="room.html" class="flex-1 border border-gray-300 rounded-md px-4 py-2 font-medium hover:bg-gray-50 transition text-center">Enter Room</a>
-              <button class="ml-2 p-2 rounded hover:bg-gray-100 transition" title="Room Settings">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
-              </button>
-            </div>
-          </div>
-          <!-- Room Card 3 -->
-          <div class="bg-white border border-gray-200 rounded-xl p-6 flex flex-col">
-            <div class="flex items-center mb-2">
-              <span class="font-bold text-lg mr-2">Web Design Principles</span>
-              <span class="ml-auto bg-gray-100 text-gray-700 text-xs font-semibold px-3 py-1 rounded-full">Owner</span>
-            </div>
-            <div class="text-gray-500 text-sm mb-4">Learn the fundamentals of good web design</div>
-            <div class="flex items-center text-gray-500 text-sm mb-4">
-              <span class="flex items-center mr-4"><span class="text-lg mr-1">&#128101;</span>32</span>
-              <span class="ml-auto">3 hours ago</span>
-            </div>
-            <div class="flex items-center mt-auto">
-              <a href="room.html" class="flex-1 border border-gray-300 rounded-md px-4 py-2 font-medium hover:bg-gray-50 transition text-center">Enter Room</a>
-              <button class="ml-2 p-2 rounded hover:bg-gray-100 transition" title="Room Settings">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
-              </button>
-            </div>
+          <div class="flex space-x-3">
+            <button class="flex items-center bg-green-600 text-white font-medium px-5 py-2 rounded-lg shadow hover:bg-green-700 transition text-base openJoinRoomModal">
+              <span class="text-xl mr-2">📥</span> Join Room
+            </button>
+            <button class="flex items-center bg-black text-white font-medium px-5 py-2 rounded-lg shadow hover:bg-gray-900 transition text-base openCreateRoomModal">
+              <span class="text-xl mr-2">+</span> Create New Room
+            </button>
           </div>
         </div>
+        
+        <!-- Rooms Loading -->
+        <div id="roomsLoading" class="text-center py-8">
+          <svg class="animate-spin h-8 w-8 text-blue-700 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <p class="text-gray-600 mt-2">Loading your rooms...</p>
+        </div>
+
+        <!-- No Rooms Message -->
+        <div id="noRooms" class="hidden text-center py-12 bg-white rounded-xl border border-gray-200">
+          <div class="text-6xl mb-4">🏫</div>
+          <h3 class="text-xl font-semibold text-gray-900 mb-2">No rooms yet</h3>
+          <p class="text-gray-600 mb-6">Create your first room or join one using an invite code</p>
+          <div class="flex justify-center space-x-4">
+            <button class="openCreateRoomModal bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">Create Room</button>
+            <button class="openJoinRoomModal bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition">Join Room</button>
+          </div>
+        </div>
+
+        <!-- Rooms Grid -->
+        <div id="roomsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+      </div>
+
+      <!-- Joined Rooms Section -->
+      <div class="mt-16">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-2xl font-bold text-gray-900">Joined Rooms</h2>
+        </div>
+        
+        <!-- Joined Rooms Loading -->
+        <div id="joinedRoomsLoading" class="text-center py-8">
+          <svg class="animate-spin h-8 w-8 text-blue-700 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <p class="text-gray-600 mt-2">Loading joined rooms...</p>
+        </div>
+
+        <!-- No Joined Rooms Message -->
+        <div id="noJoinedRooms" class="hidden text-center py-12 bg-white rounded-xl border border-gray-200">
+          <div class="text-6xl mb-4">🧑‍🎓</div>
+          <h3 class="text-xl font-semibold text-gray-900 mb-2">You haven't joined any rooms yet</h3>
+          <p class="text-gray-600 mb-6">Join a room using an invite code to get started</p>
+          <button class="openJoinRoomModal bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition">Join a Room</button>
+        </div>
+
+        <!-- Joined Rooms Grid -->
+        <div id="joinedRoomsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
       </div>
     </div>
   </main>
@@ -125,6 +148,12 @@
     <div class="bg-white rounded-xl shadow-lg w-full max-w-md p-8 relative">
       <button id="closeCreateRoomModal" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-2xl font-bold">&times;</button>
       <h2 class="text-2xl font-bold mb-6 text-gray-900">Create a Room</h2>
+      
+      <!-- Create Room Error Message -->
+      <div id="createRoomError" class="hidden bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
+        <span id="createRoomErrorText"></span>
+      </div>
+      
       <form id="createRoomForm" class="space-y-5">
         <div>
           <label for="roomName" class="block text-sm font-semibold text-gray-700">Room Name</label>
@@ -134,45 +163,380 @@
           <label for="roomDescription" class="block text-sm font-semibold text-gray-700">Description <span class="text-gray-400 font-normal">(optional)</span></label>
           <textarea id="roomDescription" name="roomDescription" rows="2" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-600 focus:border-blue-600"></textarea>
         </div>
+        <button type="submit" id="createRoomButton" class="w-full bg-blue-600 text-white font-semibold py-2 rounded-md shadow hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed">
+          Create Room
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Join Room Modal -->
+  <div id="joinRoomModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 hidden">
+    <div class="bg-white rounded-xl shadow-lg w-full max-w-md p-8 relative">
+      <button id="closeJoinRoomModal" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-2xl font-bold">&times;</button>
+      <h2 class="text-2xl font-bold mb-6 text-gray-900">Join a Room</h2>
+      
+      <!-- Join Room Error Message -->
+      <div id="joinRoomError" class="hidden bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
+        <span id="joinRoomErrorText"></span>
+      </div>
+      
+      <form id="joinRoomForm" class="space-y-5">
         <div>
-          <label for="maxParticipants" class="block text-sm font-semibold text-gray-700">Max Participants <span class="text-gray-400 font-normal">(optional)</span></label>
-          <input id="maxParticipants" name="maxParticipants" type="number" min="2" max="1000" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-600 focus:border-blue-600">
+          <label for="inviteCode" class="block text-sm font-semibold text-gray-700">Invite Code</label>
+          <input id="inviteCode" name="inviteCode" type="text" required 
+                 placeholder="ABC123" 
+                 maxlength="6"
+                 style="text-transform: uppercase"
+                 class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-600 focus:border-green-600 text-center text-xl font-mono tracking-wider">
+          <p class="text-sm text-gray-500 mt-1">Enter the 6-character code shared by your instructor</p>
         </div>
-        <div>
-          <label class="block text-sm font-semibold text-gray-700 mb-1">Room Type</label>
-          <div class="flex items-center gap-6">
-            <label class="inline-flex items-center">
-              <input type="radio" name="roomType" value="public" class="form-radio text-blue-600" checked>
-              <span class="ml-2 text-gray-700">Public</span>
-            </label>
-            <label class="inline-flex items-center">
-              <input type="radio" name="roomType" value="private" class="form-radio text-blue-600">
-              <span class="ml-2 text-gray-700">Private</span>
-            </label>
-          </div>
-        </div>
-        <button type="submit" class="w-full bg-blue-600 text-white font-semibold py-2 rounded-md shadow hover:bg-blue-700 transition">Create Room</button>
+        <button type="submit" id="joinRoomButton" class="w-full bg-green-600 text-white font-semibold py-2 rounded-md shadow hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed">
+          Join Room
+        </button>
       </form>
     </div>
   </div>
 
   <script>
-  // Show modal when any .openCreateRoomModal button is clicked
-  document.querySelectorAll('.openCreateRoomModal').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.getElementById('createRoomModal').classList.remove('hidden');
-    });
-  });
-  // Hide modal when close button is clicked
-  document.getElementById('closeCreateRoomModal').addEventListener('click', () => {
-    document.getElementById('createRoomModal').classList.add('hidden');
-  });
-  // Optional: Hide modal when clicking outside the modal content
-  document.getElementById('createRoomModal').addEventListener('click', (e) => {
-    if (e.target === e.currentTarget) {
-      e.currentTarget.classList.add('hidden');
+    // API Base URL
+    const API_BASE = 'http://localhost:3000';
+    
+    // Authentication check
+    const token = localStorage.getItem('token');
+    if (!token) {
+      window.location.href = 'login.html';
     }
-  });
+
+    // Global variables
+    let currentUser = null;
+    let userRooms = [];
+    let joinedRooms = [];
+
+    // Initialize dashboard
+    async function initDashboard() {
+      try {
+        await loadUserData();
+        await Promise.all([
+          loadUserRooms(),
+          loadJoinedRooms()
+        ]);
+        showMainContent();
+      } catch (error) {
+        console.error('Dashboard initialization error:', error);
+        showError('Failed to load dashboard data');
+        showMainContent();
+      }
+    }
+
+    // Load user data
+    async function loadUserData() {
+      try {
+        // Try to get user from localStorage first
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+          currentUser = JSON.parse(storedUser);
+          updateUserDisplay();
+        }
+
+      } catch (error) {
+        console.error('Error loading user data:', error);
+      }
+    }
+
+    // Load user rooms
+    async function loadUserRooms() {
+      try {
+        const response = await fetch(`${API_BASE}/rooms/my-rooms`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (response.ok) {
+          userRooms = await response.json();
+          console.log('Loaded user rooms:', userRooms);
+        } else {
+          console.error('Failed to load rooms:', await response.text());
+          userRooms = [];
+        }
+        
+        hideRoomsLoading();
+        updateRoomsDisplay();
+        
+      } catch (error) {
+        console.error('Error loading rooms:', error);
+        userRooms = [];
+        hideRoomsLoading();
+        updateRoomsDisplay();
+      }
+    }
+
+    // Load joined rooms
+    async function loadJoinedRooms() {
+      const joinedRoomsLoading = document.getElementById('joinedRoomsLoading');
+      try {
+        const response = await fetch(`${API_BASE}/rooms/joined`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (response.ok) {
+          joinedRooms = await response.json();
+          console.log('Loaded joined rooms:', joinedRooms);
+        } else {
+          console.error('Failed to load joined rooms:', await response.text());
+          joinedRooms = [];
+        }
+        
+        joinedRoomsLoading.classList.add('hidden');
+        updateJoinedRoomsDisplay();
+        
+      } catch (error) {
+        console.error('Error loading joined rooms:', error);
+        joinedRooms = [];
+        joinedRoomsLoading.classList.add('hidden');
+        updateJoinedRoomsDisplay();
+      }
+    }
+
+    // Update user display
+    function updateUserDisplay() {
+      if (currentUser) {
+        document.getElementById('welcomeMessage').textContent = `Welcome back, ${currentUser.fullName || currentUser.username}!`;
+        
+        // Update avatar if user has one
+        if (currentUser.avatarUrl) {
+          document.getElementById('userAvatar').src = currentUser.avatarUrl;
+        }
+      }
+    }
+
+    // Update rooms display
+    function updateRoomsDisplay() {
+      const roomsGrid = document.getElementById('roomsGrid');
+      const noRooms = document.getElementById('noRooms');
+      const roomCount = document.getElementById('roomCount');
+      
+      roomCount.textContent = userRooms.length + joinedRooms.length;
+      
+      if (userRooms.length === 0) {
+        roomsGrid.innerHTML = '';
+        noRooms.classList.remove('hidden');
+      } else {
+        noRooms.classList.add('hidden');
+        roomsGrid.innerHTML = userRooms.map(room => createRoomCard(room, true)).join('');
+      }
+    }
+
+    function updateJoinedRoomsDisplay() {
+      const joinedRoomsGrid = document.getElementById('joinedRoomsGrid');
+      const noJoinedRooms = document.getElementById('noJoinedRooms');
+      
+      if (joinedRooms.length === 0) {
+        joinedRoomsGrid.innerHTML = '';
+        noJoinedRooms.classList.remove('hidden');
+      } else {
+        noJoinedRooms.classList.add('hidden');
+        joinedRoomsGrid.innerHTML = joinedRooms.map(room => createRoomCard(room, false)).join('');
+      }
+    }
+
+    // Create room card HTML
+    function createRoomCard(room, isInstructor) {
+      const createdDate = new Date(room.createdAt).toLocaleDateString();
+      return `
+        <div class="bg-white border border-gray-200 rounded-xl p-6 flex flex-col">
+          <div class="flex items-center mb-2">
+            <span class="font-bold text-lg mr-2">${room.name}</span>
+            <span class="ml-auto ${isInstructor ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'} text-xs font-semibold px-3 py-1 rounded-full">
+              ${isInstructor ? 'Instructor' : 'Student'}
+            </span>
+          </div>
+          <div class="text-gray-500 text-sm mb-4">${room.description || 'No description'}</div>
+          ${isInstructor ? `
+          <div class="flex items-center text-gray-500 text-sm mb-4">
+            <span class="flex items-center mr-4">
+              <span class="text-lg mr-1">🔗</span>
+              <span class="font-mono text-xs bg-gray-100 px-2 py-1 rounded">${room.inviteCode}</span>
+            </span>
+            <span class="ml-auto">Created ${createdDate}</span>
+          </div>` : `
+          <div class="text-gray-500 text-sm mb-4">
+            <span>Joined on ${new Date(room.createdAt).toLocaleDateString()}</span>
+          </div>
+          `}
+          <div class="flex items-center mt-auto">
+            <a href="room.html?id=${room.id}" class="flex-1 bg-blue-600 text-white text-center rounded-md px-4 py-2 font-medium hover:bg-blue-700 transition">
+              Enter Room
+            </a>
+            ${isInstructor ? `
+            <button onclick="goToAdminDashboard('${room.id}')" class="ml-2 p-2 rounded hover:bg-gray-100 transition" title="Room Settings">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </button>` : ''}
+          </div>
+        </div>
+      `;
+    }
+
+    // Show/hide functions
+    function showMainContent() {
+      document.getElementById('loadingScreen').classList.add('hidden');
+      document.getElementById('mainContent').classList.remove('hidden');
+    }
+
+    function hideRoomsLoading() {
+      document.getElementById('roomsLoading').classList.add('hidden');
+    }
+
+    function showError(message) {
+      document.getElementById('errorText').textContent = message;
+      document.getElementById('errorMessage').classList.remove('hidden');
+    }
+
+    // Modal functions
+    function openModal(modalId) {
+      document.getElementById(modalId).classList.remove('hidden');
+    }
+
+    function closeModal(modalId) {
+      document.getElementById(modalId).classList.add('hidden');
+    }
+
+    // Event listeners
+    document.addEventListener('DOMContentLoaded', initDashboard);
+
+    // Logout functionality
+    const logoutBtn = document.getElementById('logoutBtn');
+    logoutBtn.addEventListener('click', () => {
+      // Clear user data from storage
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      
+      // Redirect to login page
+      window.location.href = 'login.html';
+    });
+
+    // Modal event listeners
+    document.querySelectorAll('.openCreateRoomModal').forEach(btn => {
+      btn.addEventListener('click', () => openModal('createRoomModal'));
+    });
+
+    document.querySelectorAll('.openJoinRoomModal').forEach(btn => {
+      btn.addEventListener('click', () => openModal('joinRoomModal'));
+    });
+
+    document.getElementById('closeCreateRoomModal').addEventListener('click', () => {
+      closeModal('createRoomModal');
+    });
+
+    document.getElementById('closeJoinRoomModal').addEventListener('click', () => {
+      closeModal('joinRoomModal');
+    });
+
+    // Close modals when clicking outside
+    ['createRoomModal', 'joinRoomModal'].forEach(modalId => {
+      document.getElementById(modalId).addEventListener('click', (e) => {
+        if (e.target === e.currentTarget) {
+          closeModal(modalId);
+        }
+      });
+    });
+
+    // Create room form
+    document.getElementById('createRoomForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const formData = new FormData(e.target);
+      const roomData = {
+        name: formData.get('roomName').trim(),
+        description: formData.get('roomDescription').trim() || undefined
+      };
+
+      try {
+        const response = await fetch(`${API_BASE}/rooms`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(roomData)
+        });
+
+        if (response.ok) {
+          const newRoom = await response.json();
+          closeModal('createRoomModal');
+          e.target.reset();
+          document.getElementById('createRoomError').classList.add('hidden');
+          await loadUserRooms(); // Refresh rooms list
+        } else {
+          const error = await response.json();
+          document.getElementById('createRoomErrorText').textContent = error.message || 'Failed to create room';
+          document.getElementById('createRoomError').classList.remove('hidden');
+        }
+      } catch (error) {
+        console.error('Create room error:', error);
+        document.getElementById('createRoomErrorText').textContent = 'Network error. Please try again.';
+        document.getElementById('createRoomError').classList.remove('hidden');
+      }
+    });
+
+    // Join room form
+    document.getElementById('joinRoomForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const formData = new FormData(e.target);
+      const inviteCode = formData.get('inviteCode').trim().toUpperCase();
+
+      if (!inviteCode) {
+        document.getElementById('joinRoomErrorText').textContent = 'Please enter an invite code.';
+        document.getElementById('joinRoomError').classList.remove('hidden');
+        return;
+      }
+
+      try {
+        const response = await fetch(`${API_BASE}/rooms/join`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ inviteCode: inviteCode })
+        });
+
+        if (response.ok) {
+          const joinedRoom = await response.json();
+          closeModal('joinRoomModal');
+          e.target.reset();
+          await loadJoinedRooms(); // Refresh joined rooms list
+          
+          // Optionally redirect to the joined room
+          window.location.href = `room.html?id=${joinedRoom.id}`;
+        } else {
+          const error = await response.json();
+          document.getElementById('joinRoomErrorText').textContent = error.message || 'Failed to join room';
+          document.getElementById('joinRoomError').classList.remove('hidden');
+        }
+      } catch (error) {
+        console.error('Join room error:', error);
+        document.getElementById('joinRoomErrorText').textContent = 'Network error. Please try again.';
+        document.getElementById('joinRoomError').classList.remove('hidden');
+      }
+    });
+
+    // Auto-uppercase invite code input
+    document.getElementById('inviteCode').addEventListener('input', function() {
+      this.value = this.value.toUpperCase().slice(0, 6);
+    });
+
+    // Navigation function for admin dashboard
+    function goToAdminDashboard(roomId) {
+      window.location.href = `admin-dashboard.html?id=${roomId}`;
+    }
   </script>
 </body>
 </html> 

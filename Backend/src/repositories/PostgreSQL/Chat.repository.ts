@@ -6,18 +6,17 @@ import { PostgresChat, ChatMapper } from "../../mappers/Chat.mapper";
 
 const CREATE_TABLE = `
     CREATE TABLE IF NOT EXISTS chats (
-        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        id VARCHAR(250) PRIMARY KEY,
         name VARCHAR(100) NOT NULL,
-        room_id UUID NOT NULL REFERENCES rooms(id) ON DELETE CASCADE,
+        room_id VARCHAR(250) NOT NULL REFERENCES rooms(id) ON DELETE CASCADE,
         created_by UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-        is_private BOOLEAN DEFAULT false,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
 `;
 
 const INSERT_CHAT = `
-    INSERT INTO chats (name, room_id, created_by, is_private)
+    INSERT INTO chats (id, name, room_id, created_by)
     VALUES ($1, $2, $3, $4)
     RETURNING id;
 `;
@@ -33,8 +32,8 @@ const GET_ALL_CHATS = `
 
 const UPDATE_CHAT = `
     UPDATE chats
-    SET name = $1, room_id = $2, created_by = $3, is_private = $4
-    WHERE id = $5;
+    SET name = $1, room_id = $2, created_by = $3
+    WHERE id = $4;
 `;
 
 const DELETE_CHAT = `
@@ -65,10 +64,10 @@ export class ChatRepository implements IRepository<Chat>, Initializable {
         try {
             const pool = await ConnectionManager.getConnection();
             const result = await pool.query(INSERT_CHAT, [
+                chat.getId(),
                 chat.getName(),
                 chat.getRoomId(),
                 chat.getCreatedBy(),
-                chat.getIsPrivate()
             ]);
             logger.info("Chat inserted");
             return result.rows[0].id;
@@ -120,7 +119,6 @@ export class ChatRepository implements IRepository<Chat>, Initializable {
                 chat.getName(),
                 chat.getRoomId(),
                 chat.getCreatedBy(),
-                chat.getIsPrivate(),
                 chat.getId()
             ]);
             if (result.rowCount === 0) {
@@ -171,4 +169,10 @@ export class ChatRepository implements IRepository<Chat>, Initializable {
     }
 
     
+}
+
+export async function createChatRepository(): Promise<ChatRepository> {
+    const chatRepository = new ChatRepository();
+    await chatRepository.init();
+    return chatRepository;
 }

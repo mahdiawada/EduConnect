@@ -6,8 +6,8 @@ import { PostgresMessage, MessageMapper } from "../../mappers/Messages.mapper";
 
 const CREATE_TABLE = `
 CREATE TABLE IF NOT EXISTS messages (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    chat_id UUID NOT NULL,
+    id VARCHAR(250) PRIMARY KEY,
+    chat_id VARCHAR(250) NOT NULL,
     sender_id UUID NOT NULL,
     content TEXT NOT NULL,
     message_type VARCHAR(10) DEFAULT 'text' CHECK (message_type IN ('text', 'image', 'file', 'system')),
@@ -17,8 +17,8 @@ CREATE TABLE IF NOT EXISTS messages (
 );`;
 
 const INSERT_MESSAGE = `
-INSERT INTO messages (chat_id, sender_id, content, message_type)
-VALUES ($1, $2, $3, $4)
+INSERT INTO messages (id, chat_id, sender_id, content, message_type)
+VALUES ($1, $2, $3, $4, $5)
 RETURNING id;
 `;
 
@@ -80,6 +80,7 @@ export class MessagesRepository implements IRepository<Message>, Initializable {
         try {
             const pool = await ConnectionManager.getConnection();
             const result = await pool.query(INSERT_MESSAGE, [
+                message.getId(),
                 message.getChatId(),
                 message.getSenderId(),
                 message.getContent(),
@@ -223,3 +224,9 @@ export class MessagesRepository implements IRepository<Message>, Initializable {
         }
     }
 } 
+
+export async function createMessagesRepository(): Promise<MessagesRepository> {
+    const messagesRepository = new MessagesRepository();
+    await messagesRepository.init();
+    return messagesRepository;
+}

@@ -1,166 +1,77 @@
 import { Room } from "../models/Room.model";
 import { RoomMember } from "../models/RoomMember.model";
-import { RoomRepository } from "../repositories/PostgreSQL/Room.repository";
-import { RoomMemberRepository } from "../repositories/PostgreSQL/RoomMember.repository";
-import { RoomMapper } from "../mappers/Room.mapper";
-import { v4 as uuidv4 } from 'uuid';
+import { createRoomRepository, RoomRepository } from "../repositories/PostgreSQL/Room.repository";
+import { createRoomMemberRepository, RoomMemberRepository } from "../repositories/PostgreSQL/RoomMember.repository";
+import { createUserRepository, UserRepository } from "../repositories/PostgreSQL/User.repository";
+import { generateUUID } from "../utils";
+import { id } from "../repositories/IRepository";
+import nodemailer from 'nodemailer';
+import config from "../config";
 
 export class RoomService {
     private roomRepo: RoomRepository;
     private roomMemberRepo: RoomMemberRepository;
+    private userRepo: UserRepository;
 
-    constructor() {
-        this.roomRepo = new RoomRepository();
-        this.roomMemberRepo = new RoomMemberRepository();
+    constructor(roomRepo : RoomRepository, roomMemberRepo : RoomMemberRepository, userRepo?: UserRepository) {
+        this.roomRepo = roomRepo;
+        this.roomMemberRepo = roomMemberRepo;
+        this.userRepo = userRepo!;
     }
 
     // Create a new room
-    public async createRoom(name: string, instructorId: string, description?: string, isPublic: boolean = false, maxParticipants: number = 50): Promise<Room> {
-        this.validateRoomData(name, instructorId, maxParticipants);
-        
-        const roomId = uuidv4();
+    public async createRoom(name: string, instructorId: string, description?: string): Promise<id> {
+        this.validateRoomData(name, instructorId);
+        const roomId = generateUUID("room");
         const inviteCode = this.generateInviteCode();
-        const room = new Room(roomId, name, instructorId, inviteCode, description, isPublic, maxParticipants);
-        
-        await this.roomRepo.create(room);
-        
+        const room = new Room(roomId, name, instructorId, inviteCode, description);
+            
         // Add instructor as room member
         await this.addRoomMember(roomId, instructorId, 'instructor');
         
-        return room;
+        return (await this.getRoomRepo()).create(room);
     }
+
+    
 
     // Get a specific room
-    public async getRoom(roomId: string): Promise<Room> {
-        try {
-            return await this.roomRepo.get(roomId);
-        } catch (error) {
-            throw new Error(`Failed to get room ${roomId}: ${error}`);
-        }
+    public async getRoomById(roomId: string): Promise<Room> {
+        return (await this.getRoomRepo()).get(roomId);
     }
 
-    // Get all rooms for a user (as instructor or member)
-    public async getRoomsByUser(userId: string): Promise<Room[]> {
-        try {
-            const memberRooms = await this.roomMemberRepo.getRoomsByUserId(userId);
-            // Convert raw database rows to Room objects
-            const mapper = new RoomMapper();
-            return memberRooms.map((roomData: any) => mapper.map(roomData));
-        } catch (error) {
-            throw new Error(`Failed to get rooms for user ${userId}: ${error}`);
-        }
+    public async getAllRooms(): Promise<Room[]> {
+        return (await this.getRoomRepo()).getAll();
     }
 
-    // Get all public rooms
-    public async getPublicRooms(): Promise<Room[]> {
-        try {
-            return await this.roomRepo.getPublicRooms();
-        } catch (error) {
-            throw new Error(`Failed to get public rooms: ${error}`);
+    // Get rooms created by a specific instructor
+    public async getRoomsByInstructorId(instructorId: string): Promise<Room[]> {
+        if (!instructorId || instructorId.trim() === "") {
+            throw new Error("Instructor ID is required");
         }
+        return (await this.getRoomRepo()).getRoomsByInstructorId(instructorId);
     }
 
-    // Join a room by invite code
-    public async joinRoomByInvite(inviteCode: string, userId: string, role: 'student' | 'instructor' = 'student'): Promise<Room> {
-        try {
-            const room = await this.roomRepo.getByInviteCode(inviteCode);
-            
-            if (!room.canJoin()) {
-                throw new Error("This room is not active");
-            }
-            
-            // Check if user is already a member
-            const existingMember = await this.roomMemberRepo.getByRoomAndUser(room.getId(), userId);
-            if (existingMember) {
-                throw new Error("You are already a member of this room");
-            }
-            
-            // Check if room is full
-            const memberCount = await this.roomMemberRepo.getMemberCount(room.getId());
-            if (room.isFull(memberCount)) {
-                throw new Error("This room is full");
-            }
-            
-            await this.addRoomMember(room.getId(), userId, role);
-            return room;
-        } catch (error) {
-            throw new Error(`Failed to join room: ${error}`);
+    public async getJoinedRooms(userId: string): Promise<Room[]> {
+        const memberships = await (await this.getRoomMemberRepo()).getMembershipsByUserId(userId);
+        const studentMemberships = memberships.filter(m => m.getRole() === 'student' || m.getRole() === 'moderator');
+
+        if (studentMemberships.length === 0) {
+            return [];
         }
+
+        const roomPromises = studentMemberships.map(membership => {
+            return this.getRoomById(membership.getRoomId());
+        });
+
+        return Promise.all(roomPromises);
     }
 
-    // Join a public room
-    public async joinPublicRoom(roomId: string, userId: string, role: 'student' | 'instructor' = 'student'): Promise<void> {
-        try {
-            const room = await this.getRoom(roomId);
-            
-            if (!room.canBeJoinedPublicly()) {
-                throw new Error("This room is not public or not active");
-            }
-            
-            // Check if user is already a member
-            const existingMember = await this.roomMemberRepo.getByRoomAndUser(roomId, userId);
-            if (existingMember) {
-                throw new Error("You are already a member of this room");
-            }
-            
-            // Check if room is full
-            const memberCount = await this.roomMemberRepo.getMemberCount(roomId);
-            if (room.isFull(memberCount)) {
-                throw new Error("This room is full");
-            }
-            
-            await this.addRoomMember(roomId, userId, role);
-        } catch (error) {
-            throw new Error(`Failed to join public room: ${error}`);
-        }
-    }
-
-    // Add a member to a room
-    private async addRoomMember(roomId: string, userId: string, role: 'student' | 'instructor'): Promise<void> {
-        const memberId = uuidv4();
-        const member = new RoomMember(memberId, roomId, userId, role);
-        await this.roomMemberRepo.create(member);
-    }
-
-    // Get room members
-    public async getRoomMembers(roomId: string): Promise<RoomMember[]> {
-        try {
-            return await this.roomMemberRepo.getByRoomId(roomId);
-        } catch (error) {
-            throw new Error(`Failed to get room members for room ${roomId}: ${error}`);
-        }
-    }
-
-    // Remove a member from a room
-    public async removeRoomMember(roomId: string, userId: string, removedBy: string): Promise<void> {
-        try {
-            const room = await this.getRoom(roomId);
-            const remover = await this.roomMemberRepo.getByRoomAndUser(roomId, removedBy);
-            
-            // Only instructor or the user themselves can remove
-            if (remover?.getRole() !== 'instructor' && removedBy !== userId) {
-                throw new Error("You don't have permission to remove this member");
-            }
-            
-            // Instructor cannot remove themselves if they're the only instructor
-            if (remover?.getRole() === 'instructor' && removedBy === userId) {
-                const instructors = await this.roomMemberRepo.getByRoomIdAndRole(roomId, 'instructor');
-                if (instructors.length <= 1) {
-                    throw new Error("Cannot remove the only instructor from the room");
-                }
-            }
-            
-            await this.roomMemberRepo.deleteByRoomAndUser(roomId, userId);
-        } catch (error) {
-            throw new Error(`Failed to remove room member: ${error}`);
-        }
-    }
 
     // Update room information
-    public async updateRoom(roomId: string, updates: { name?: string; description?: string; isPublic?: boolean; maxParticipants?: number }, userId: string): Promise<void> {
+    public async updateRoom(roomId: string, updates: { name?: string; description?: string; }, userId: string): Promise<void> {
         try {
-            const room = await this.getRoom(roomId);
-            const member = await this.roomMemberRepo.getByRoomAndUser(roomId, userId);
+            const room = await this.getRoomById(roomId);
+            const member = await (await this.getRoomMemberRepo()).getByRoomAndUser(roomId, userId);
             
             // Only instructor can update room
             if (member?.getRole() !== 'instructor') {
@@ -168,7 +79,6 @@ export class RoomService {
             }
             
             if (updates.name) {
-                this.validateRoomName(updates.name);
                 room.setName(updates.name);
             }
             
@@ -176,28 +86,129 @@ export class RoomService {
                 room.setDescription(updates.description);
             }
             
-            if (updates.isPublic !== undefined) {
-                room.setIsPublic(updates.isPublic);
-            }
-            
-            if (updates.maxParticipants) {
-                this.validateMaxParticipants(updates.maxParticipants);
-                room.setMaxParticipants(updates.maxParticipants);
-            }
-            
-            await this.roomRepo.update(room);
+            await (await this.getRoomRepo()).update(room);
         } catch (error) {
             throw new Error(`Failed to update room: ${error}`);
         }
     }
-    
+
+    // Delete a room
+    public async deleteRoom(roomId: string, userId: string): Promise<void> {
+        try {
+            const member = await (await this.getRoomMemberRepo()).getByRoomAndUser(roomId, userId);
+
+            // Only instructor can delete room
+            if (member?.getRole() !== 'instructor') {
+                throw new Error("Only instructors can delete a room");
+            }
+
+            await (await this.getRoomRepo()).delete(roomId);
+        } catch (error) {
+            throw new Error(`Failed to delete room: ${error}`);
+        }
+    }
+
+    // Join a room with invite code
+    public async joinRoom(inviteCode: string, userId: string): Promise<Room> {
+        const room = await (await this.getRoomRepo()).getByInviteCode(inviteCode);
+
+        if (!room) {
+            throw new Error("Invalid invite code");
+        }
+
+        const isMember = await (await this.getRoomMemberRepo()).getByRoomAndUser(room.getId(), userId);
+
+        if (isMember) {
+            throw new Error("User is already a member of this room");
+        }
+
+        await this.addRoomMember(room.getId(), userId, 'student');
+
+        return room;
+    }
+
+    // Remove a member from the room
+    public async removeMember(roomId: string, memberIdToRemove: string, requesterId: string): Promise<void> {
+        try {
+            // Check if requester is an instructor in the room
+            const requesterMember = await (await this.getRoomMemberRepo()).getByRoomAndUser(roomId, requesterId);
+            if (!requesterMember || requesterMember.getRole() !== 'instructor') {
+                throw new Error("Only instructors can remove members from the room");
+            }
+
+            // Get the member to be removed
+            const memberToRemove = await (await this.getRoomMemberRepo()).get(memberIdToRemove);
+            if (!memberToRemove || memberToRemove.getRoomId() !== roomId) {
+                throw new Error("Member not found in this room");
+            }
+
+            // Prevent removing instructors
+            if (memberToRemove.getRole() === 'instructor') {
+                throw new Error("Cannot remove instructors from the room");
+            }
+
+            // Remove the member
+            await (await this.getRoomMemberRepo()).delete(memberIdToRemove);
+        } catch (error) {
+            throw new Error(`Failed to remove member: ${error}`);
+        }
+    }
+
+    // Get room members with user details
+    public async getRoomMembers(roomId: string): Promise<any[]> {
+        try {
+            // Get all room members
+            const roomMembers = await (await this.getRoomMemberRepo()).getByRoomId(roomId);
+            
+            // Get user details for each member
+            const membersWithDetails = await Promise.all(
+                roomMembers.map(async (member) => {
+                    const user = await (await this.getUserRepo()).get(member.getUserId());
+                    return {
+                        id: member.getId(),
+                        userId: member.getUserId(),
+                        roomId: member.getRoomId(),
+                        role: member.getRole(),
+                        joinedAt: member.getJoinedAt(),
+                        isActive: member.getIsActive(),
+                        fullName: user.getFullName(),
+                        email: user.getEmail(),
+                        username: user.getUsername(),
+                        avatarUrl: user.getAvatarUrl()
+                    };
+                })
+            );
+
+            return membersWithDetails;
+        } catch (error) {
+            throw new Error(`Failed to get room members for room ${roomId}: ${error}`);
+        }
+    }
+
+    public nodeMailerTransporter() {
+        const transporter = nodemailer.createTransport({
+            service: "gmail",
+            auth: {
+                user: config.nodemailer.gmail_account,
+                pass: config.nodemailer.gmail_app_pass
+            }
+        });
+        return transporter;
+    }
+
+    private async addRoomMember(roomId: string, userId: string, role: 'instructor' | 'student' | 'moderator'){
+        const memberId = generateUUID("member");
+        const newMember = new RoomMember(memberId, roomId, userId, role);
+        await (await this.getRoomMemberRepo()).create(newMember);
+    }
+
     // Generate invite code
     private generateInviteCode(): string {
         return Math.random().toString(36).substring(2, 8).toUpperCase();
     }
 
     // Validation methods
-    private validateRoomData(name: string, instructorId: string, maxParticipants: number): void {
+    private validateRoomData(name: string, instructorId: string): void {
         if (!name || name.trim() === "") {
             throw new Error("Room name is required");
         }
@@ -209,25 +220,37 @@ export class RoomService {
         if (!instructorId || instructorId.trim() === "") {
             throw new Error("Instructor ID is required");
         }
-        
-        if (maxParticipants < 1 || maxParticipants > 1000) {
-            throw new Error("Max participants must be between 1 and 1000");
+    }
+
+    private async getRoomRepo() {
+            if (!this.roomRepo) {
+                this.roomRepo = await createRoomRepository();
+            }
+            return this.roomRepo;
+        }
+    
+    private async getRoomMemberRepo() {
+        if (!this.roomMemberRepo) {
+                this.roomMemberRepo = await createRoomMemberRepository();
+            }
+            return this.roomMemberRepo;
+    }
+
+    private async getUserRepo() {
+        if (!this.userRepo) {
+            this.userRepo = await createUserRepository();
+        }
+        return this.userRepo;
+    }
+
+    public async isUserMemberOfRoom(userId: string, roomId: string): Promise<boolean> {
+        try {
+            const members = await this.roomMemberRepo.getByRoomId(roomId);
+            return members.some((member: any) => member.getUserId() === userId);
+        } catch (error) {
+            console.error('Error checking room membership:', error);
+            return false;
         }
     }
 
-    private validateRoomName(name: string): void {
-        if (!name || name.trim() === "") {
-            throw new Error("Room name is required");
-        }
-        
-        if (name.length > 100) {
-            throw new Error("Room name must be less than 100 characters");
-        }
-    }
-
-    private validateMaxParticipants(maxParticipants: number): void {
-        if (maxParticipants < 1 || maxParticipants > 1000) {
-            throw new Error("Max participants must be between 1 and 1000");
-        }
-    }
 } 

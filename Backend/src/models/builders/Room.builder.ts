@@ -7,8 +7,6 @@ export class RoomBuilder {
     private instructorId!: string;
     private inviteCode!: string;
     private description?: string;
-    private isPublic: boolean = false;
-    private maxParticipants: number = 50;
     private isActive: boolean = true;
     private createdAt?: Date;
     private updatedAt?: Date;
@@ -35,16 +33,6 @@ export class RoomBuilder {
 
     setDescription(description: string): RoomBuilder {
         this.description = description;
-        return this;
-    }
-
-    setIsPublic(isPublic: boolean): RoomBuilder {
-        this.isPublic = isPublic;
-        return this;
-    }
-
-    setMaxParticipants(maxParticipants: number): RoomBuilder {
-        this.maxParticipants = maxParticipants;
         return this;
     }
 
@@ -90,8 +78,6 @@ export class RoomBuilder {
             this.instructorId,
             this.inviteCode,
             this.description,
-            this.isPublic,
-            this.maxParticipants,
             this.isActive,
             this.createdAt,
             this.updatedAt

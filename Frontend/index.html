@@ -1,84 +1,215 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EduConnect</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EduConnect | Learn & Teach Together</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-50 min-h-screen">
-    <!-- Navigation Bar -->
-    <nav class="bg-white shadow-sm border-b border-gray-200">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16 items-center">
-                <!-- Logo -->
-                <div class="flex-shrink-0">
-                    <span class="text-2xl font-bold text-blue-600">EduConnect</span>
-                </div>
-                <!-- Nav Buttons -->
-                <div class="flex items-center space-x-4">
-                    <button class="text-gray-700 hover:text-blue-600 font-medium px-4 py-2 rounded transition">Login</button>
-                    <a href="register.html" class="bg-blue-600 text-white font-medium px-4 py-2 rounded shadow hover:bg-blue-700 transition">Get Started</a>
-                </div>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+  <!-- Navigation -->
+  <nav class="bg-white shadow-lg sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-16">
+        <!-- Logo -->
+        <div class="flex items-center">
+          <span class="text-2xl font-bold text-blue-600">EduConnect</span>
+        </div>
+        <!-- Auth Buttons -->
+        <div id="authButtons" class="flex items-center space-x-4">
+          <a href="login.html" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition">
+            Log In
+          </a>
+          <a href="register.html" class="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition">
+            Sign Up
+          </a>
+        </div>
+        <!-- Logged In User -->
+        <div id="userSection" class="hidden flex items-center space-x-4">
+          <span id="userWelcome" class="text-gray-700"></span>
+          <a href="dashboard.html" class="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition">
+            Dashboard
+          </a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <div class="flex flex-col lg:flex-row items-center max-w-7xl mx-auto px-4 py-16 lg:py-24">
+    <!-- Left Content -->
+    <div class="lg:w-1/2 lg:pr-12 mb-12 lg:mb-0">
+      <h1 class="text-5xl lg:text-6xl font-bold text-gray-900 leading-tight mb-6">
+        Learn & Teach <br>
+        <span class="text-blue-600">Together</span>
+      </h1>
+      <p class="text-xl text-gray-600 mb-8 leading-relaxed">
+        Connect with students and instructors in virtual classrooms. Create engaging learning experiences with real-time chat, video sessions, and collaborative tools.
+      </p>
+      <div id="heroButtons" class="flex flex-col sm:flex-row gap-4">
+        <a href="register.html" class="bg-blue-600 text-white text-lg font-semibold px-8 py-4 rounded-lg shadow-lg hover:bg-blue-700 transition-all duration-200 text-center">
+          Get Started Free
+        </a>
+        <a href="login.html" class="border-2 border-blue-600 text-blue-600 text-lg font-semibold px-8 py-4 rounded-lg hover:bg-blue-50 transition-all duration-200 text-center">
+          Sign In
+        </a>
+      </div>
+      <!-- Hero Buttons for Logged In Users -->
+      <div id="loggedInHeroButtons" class="hidden">
+        <a href="dashboard.html" class="bg-blue-600 text-white text-lg font-semibold px-8 py-4 rounded-lg shadow-lg hover:bg-blue-700 transition-all duration-200 text-center inline-block">
+          Go to Dashboard
+        </a>
+      </div>
+    </div>
+
+    <!-- Right Content -->
+    <div class="lg:w-1/2">
+      <div class="bg-white rounded-2xl shadow-2xl p-8 lg:p-10">
+        <div class="text-center mb-8">
+          <div class="text-6xl mb-4">🎓</div>
+          <h2 class="text-2xl font-bold text-gray-900 mb-2">Join EduConnect Today</h2>
+          <p class="text-gray-600">Start your learning journey or share your knowledge</p>
+        </div>
+        
+        <!-- Quick Stats -->
+        <div class="grid grid-cols-2 gap-6 mb-8">
+          <div class="text-center p-4 bg-blue-50 rounded-lg">
+            <div class="text-2xl font-bold text-blue-600">100+</div>
+            <div class="text-sm text-gray-600">Active Rooms</div>
+          </div>
+          <div class="text-center p-4 bg-green-50 rounded-lg">
+            <div class="text-2xl font-bold text-green-600">1K+</div>
+            <div class="text-sm text-gray-600">Students</div>
+          </div>
+          <div class="text-center p-4 bg-purple-50 rounded-lg">
+            <div class="text-2xl font-bold text-purple-600">500+</div>
+            <div class="text-sm text-gray-600">Instructors</div>
+          </div>
+          <div class="text-center p-4 bg-orange-50 rounded-lg">
+            <div class="text-2xl font-bold text-orange-600">24/7</div>
+            <div class="text-sm text-gray-600">Support</div>
+          </div>
+        </div>
+
+        <!-- Features -->
+        <div class="space-y-4">
+          <div class="flex items-center space-x-3">
+            <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+              <span class="text-blue-600 text-sm">💬</span>
             </div>
-        </div>
-    </nav>
-    <!-- Hero Section -->
-    <section class="bg-gray-50 py-20">
-        <div class="max-w-2xl mx-auto text-center px-4">
-            <h1 class="text-4xl sm:text-5xl font-extrabold text-gray-900 mb-4">Connect, Learn, and Grow Together</h1>
-            <p class="text-lg sm:text-xl text-gray-600 mb-8">Create educational rooms, manage your students, and deliver engaging courses with real-time chat</p>
-            <a href="register.html" class="inline-block bg-blue-600 text-white font-semibold px-8 py-3 rounded-lg shadow hover:bg-blue-700 transition text-lg mb-16">Start Teaching</a>
-            <div class="mt-10">
-                <h2 class="text-xl sm:text-2xl font-semibold text-gray-800 mb-8">Everything you need for Online Education</h2>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <!-- Card 1 -->
-                    <div class="bg-white rounded-xl shadow p-6 flex flex-col items-center text-center">
-                        <div class="mb-3 text-blue-600 text-3xl">🏫</div>
-                        <h3 class="font-bold text-lg mb-2">Room Management</h3>
-                        <p class="text-gray-500">Easily create, join, and manage virtual classrooms for any subject or group.</p>
-                    </div>
-                    <!-- Card 2 -->
-                    <div class="bg-white rounded-xl shadow p-6 flex flex-col items-center text-center">
-                        <div class="mb-3 text-blue-600 text-3xl">💬</div>
-                        <h3 class="font-bold text-lg mb-2">Group Chats</h3>
-                        <p class="text-gray-500">Communicate in real-time with students and teachers using integrated group chat.</p>
-                    </div>
-                    <!-- Card 3 -->
-                    <div class="bg-white rounded-xl shadow p-6 flex flex-col items-center text-center">
-                        <div class="mb-3 text-blue-600 text-3xl">🎥</div>
-                        <h3 class="font-bold text-lg mb-2">Live Video Meetings</h3>
-                        <p class="text-gray-500">Host and attend live video sessions for interactive lessons and discussions.</p>
-                    </div>
-                    <!-- Card 4 -->
-                    <div class="bg-white rounded-xl shadow p-6 flex flex-col items-center text-center">
-                        <div class="mb-3 text-blue-600 text-3xl">🛠️</div>
-                        <h3 class="font-bold text-lg mb-2">Admin Dashboard</h3>
-                        <p class="text-gray-500">Monitor activity, manage users, and access analytics from a powerful dashboard.</p>
-                    </div>
-                    <!-- Card 5 -->
-                    <div class="bg-white rounded-xl shadow p-6 flex flex-col items-center text-center">
-                        <div class="mb-3 text-blue-600 text-3xl">📚</div>
-                        <h3 class="font-bold text-lg mb-2">Course Organization</h3>
-                        <p class="text-gray-500">Organize materials, assignments, and resources for streamlined learning.</p>
-                    </div>
-                    <!-- Card 6 -->
-                    <div class="bg-white rounded-xl shadow p-6 flex flex-col items-center text-center">
-                        <div class="mb-3 text-blue-600 text-3xl">📞</div>
-                        <h3 class="font-bold text-lg mb-2">Easy Communication</h3>
-                        <p class="text-gray-500">Stay connected with announcements, notifications, and direct messaging tools.</p>
-                    </div>
-                </div>
+            <span class="text-gray-700">Real-time chat & messaging</span>
+          </div>
+          <div class="flex items-center space-x-3">
+            <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+              <span class="text-green-600 text-sm">📹</span>
             </div>
+            <span class="text-gray-700">Video conferencing</span>
+          </div>
+          <div class="flex items-center space-x-3">
+            <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+              <span class="text-purple-600 text-sm">📚</span>
+            </div>
+            <span class="text-gray-700">Interactive learning rooms</span>
+          </div>
+          <div class="flex items-center space-x-3">
+            <div class="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
+              <span class="text-orange-600 text-sm">👥</span>
+            </div>
+            <span class="text-gray-700">Collaborative workspaces</span>
+          </div>
         </div>
-    </section>
-    <!-- Footer -->
-    <footer class="bg-blue-600 text-white py-20 mt-20">
-        <div class="max-w-2xl mx-auto text-center px-4">
-            <h2 class="text-2xl sm:text-3xl font-extrabold mb-3">Ready to Transform Your Teaching?</h2>
-            <p class="text-lg mb-8">Join thousands of educators who are already using EduConnect to deliver amazing learning experiences.</p>
-            <a href="register.html" class="inline-block bg-white text-blue-600 font-semibold px-8 py-3 rounded-lg shadow hover:bg-blue-100 transition text-lg">Create Your First Room</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Features Section -->
+  <div class="bg-white py-16">
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="text-center mb-16">
+        <h2 class="text-4xl font-bold text-gray-900 mb-4">Everything You Need for Online Learning</h2>
+        <p class="text-xl text-gray-600">Powerful tools designed for educators and students</p>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <!-- Feature 1 -->
+        <div class="text-center p-6">
+          <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span class="text-2xl">🏫</span>
+          </div>
+          <h3 class="text-xl font-semibold text-gray-900 mb-2">Virtual Classrooms</h3>
+          <p class="text-gray-600">Create and manage unlimited virtual rooms for different subjects and courses.</p>
         </div>
-    </footer>
+        
+        <!-- Feature 2 -->
+        <div class="text-center p-6">
+          <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span class="text-2xl">💭</span>
+          </div>
+          <h3 class="text-xl font-semibold text-gray-900 mb-2">Real-time Chat</h3>
+          <p class="text-gray-600">Instant messaging and group discussions to keep everyone connected.</p>
+        </div>
+        
+        <!-- Feature 3 -->
+        <div class="text-center p-6">
+          <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span class="text-2xl">📊</span>
+          </div>
+          <h3 class="text-xl font-semibold text-gray-900 mb-2">Progress Tracking</h3>
+          <p class="text-gray-600">Monitor student progress and engagement with detailed analytics.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-gray-900 text-white py-12">
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div class="md:col-span-2">
+          <div class="text-2xl font-bold text-blue-400 mb-4">EduConnect</div>
+          <p class="text-gray-400 mb-6">Connecting educators and learners through innovative technology. Create, share, and learn in virtual environments designed for modern education.</p>
+        </div>
+        <div>
+          <h4 class="text-lg font-semibold mb-4">Quick Links</h4>
+          <ul class="space-y-2 text-gray-400">
+            <li><a href="register.html" class="hover:text-white transition">Sign Up</a></li>
+            <li><a href="login.html" class="hover:text-white transition">Login</a></li>
+            <li><a href="#" class="hover:text-white transition">About</a></li>
+            <li><a href="#" class="hover:text-white transition">Contact</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="text-lg font-semibold mb-4">Support</h4>
+          <ul class="space-y-2 text-gray-400">
+            <li><a href="#" class="hover:text-white transition">Help Center</a></li>
+            <li><a href="#" class="hover:text-white transition">Documentation</a></li>
+            <li><a href="#" class="hover:text-white transition">Community</a></li>
+            <li><a href="#" class="hover:text-white transition">Privacy Policy</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
+        <p>&copy; 2024 EduConnect. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Check if user is already logged in
+    const token = localStorage.getItem('token');
+    const user = localStorage.getItem('user');
+    
+    if (token && user) {
+      // User is logged in, show user section
+      const userData = JSON.parse(user);
+      document.getElementById('authButtons').classList.add('hidden');
+      document.getElementById('userSection').classList.remove('hidden');
+      document.getElementById('userWelcome').textContent = `Welcome, ${userData.fullName || userData.username}!`;
+      
+      // Update hero buttons
+      document.getElementById('heroButtons').classList.add('hidden');
+      document.getElementById('loggedInHeroButtons').classList.remove('hidden');
+    }
+  </script>
 </body>
 </html> 

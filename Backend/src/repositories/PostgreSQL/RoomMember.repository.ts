@@ -6,8 +6,8 @@ import { PostgresRoomMember, RoomMemberMapper } from "../../mappers/RoomMember.m
 
 const CREATE_TABLE = `
     CREATE TABLE IF NOT EXISTS room_members (
-        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-        room_id UUID NOT NULL REFERENCES rooms(id) ON DELETE CASCADE,
+        id VARCHAR(250) PRIMARY KEY,
+        room_id VARCHAR(250) NOT NULL REFERENCES rooms(id) ON DELETE CASCADE,
         user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
         role VARCHAR(20) DEFAULT 'student' CHECK (role IN ('instructor', 'student', 'moderator')),
         joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -17,8 +17,8 @@ const CREATE_TABLE = `
 `;
 
 const INSERT_ROOM_MEMBER = `
-    INSERT INTO room_members (room_id, user_id, role)
-    VALUES ($1, $2, $3)
+    INSERT INTO room_members (id,room_id, user_id, role)
+    VALUES ($1, $2, $3, $4)
     RETURNING id;
 `;
 
@@ -89,6 +89,7 @@ export class RoomMemberRepository implements IRepository<RoomMember>, Initializa
         try {
             const pool = await ConnectionManager.getConnection();
             const result = await pool.query(INSERT_ROOM_MEMBER, [
+            roomMember.getId(),
             roomMember.getRoomId(),
             roomMember.getUserId(),
             roomMember.getRole()
@@ -256,4 +257,25 @@ export class RoomMemberRepository implements IRepository<RoomMember>, Initializa
             throw new Error(`Failed to delete room member for room ${roomId} and user ${userId}`);
         }
     }
+
+    async getMembershipsByUserId(userId: string): Promise<RoomMember[]> {
+        try {
+            const pool = await ConnectionManager.getConnection();
+            const result = await pool.query("SELECT * FROM room_members WHERE user_id = $1", [userId]);
+            if (result.rows.length === 0) {
+                return [];
+            }
+            const mapper = new RoomMemberMapper();
+            return result.rows.map((member: PostgresRoomMember) => mapper.map(member));
+        } catch (error) {
+            logger.error(`Failed to get memberships for user ${userId}:`, error);
+            throw new Error(`Failed to get memberships for user ${userId}`);
+        }
+    }
+}
+
+export async function createRoomMemberRepository(): Promise<RoomMemberRepository> {
+    const userRepository = new RoomMemberRepository();
+    await userRepository.init();
+    return userRepository;
 }

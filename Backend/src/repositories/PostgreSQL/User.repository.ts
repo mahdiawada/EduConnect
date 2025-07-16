@@ -3,6 +3,7 @@ import { id, Initializable, IRepository } from "../IRepository";
 import logger from "../../utils/logger";
 import { ConnectionManager } from "./ConnectionManager";
 import { PostgresUser, UserMapper } from "../../mappers/User.mapper";
+import { DbException, InitializationException } from "../../utils/exceptions/RepositoryExceptions";
 
 const CREATE_TABLE = `
 CREATE TABLE IF NOT EXISTS users (
@@ -60,8 +61,8 @@ export class UserRepository implements IRepository<User>, Initializable {
         await pool.query(CREATE_TABLE);
         logger.info("User table initialized");
         } catch (error) {
-            logger.error("Failed to initialize User table", error);
-            throw new Error("Failed to initialize User table");
+            logger.error("Failed to initialize User table", error as Error);
+            throw new InitializationException("Failed to initialize User table", error as Error);
         }
     }    
 
@@ -78,11 +79,10 @@ export class UserRepository implements IRepository<User>, Initializable {
                 user.getIsActive()
             ]);
             logger.info("User Inserted");
-            // Return the database-generated ID, not the User object ID
             return result.rows[0].id;
         } catch (error) {
-            logger.error('Error creating user:', error);
-            throw new Error('Failed to create user.');
+            logger.error('Error creating user:', error as Error);
+            throw new DbException('Failed to create user.', error as Error);
         }
     }
     async get(id: id): Promise<User> {
@@ -96,13 +96,8 @@ export class UserRepository implements IRepository<User>, Initializable {
             
             return new UserMapper().map(result.rows[0]);
         } catch (error) {
-            // Check if this is a "not found" error we threw ourselves
-            if (error instanceof Error && error.message.includes('not found')) {
-                throw error; // Re-throw the original "not found" error
-            }
-            
-            logger.error(`Failed to get user of id ${id}:`, error);
-            throw new Error(`Failed to get user of id ${id}`);
+            logger.error(`Failed to get user of id ${id}:`, error as Error);
+            throw new DbException(`Failed to get user of id ${id}`, error as Error);
         }
     }
     async getAll(): Promise<User[]> {
@@ -110,13 +105,13 @@ export class UserRepository implements IRepository<User>, Initializable {
             const pool = await ConnectionManager.getConnection();
             const result = await pool.query(GET_ALL_USERS);
             if (result.rows.length === 0) {
-                throw new Error(`No Users found`);
+                return [];
             }
             const mapper = new UserMapper();
             return result.rows.map((user: PostgresUser) => mapper.map(user)); 
         } catch (error) {
-            logger.error("Failed to get all users ");
-            throw new Error("Failed to get all users"+ error );
+            logger.error("Failed to get all users ", error as Error);
+            throw new DbException("Failed to get all users", error as Error );
         }
     }
     async update(user: User): Promise<void> {
@@ -134,26 +129,18 @@ export class UserRepository implements IRepository<User>, Initializable {
             ]);
             logger.info("User Updated");
         } catch (error) {
-            logger.error("Couldn't update user of id"+ user.getId());
-            throw new Error(`Couldn't update user of id ${user.getId()}`+ error)
+            logger.error("Couldn't update user of id"+ user.getId(), error as Error);
+            throw new DbException(`Couldn't update user of id ${user.getId()}`, error as Error)
         }
     }
     async delete(id: id): Promise<void> {
         try {
             const pool = await ConnectionManager.getConnection();
             const result = await pool.query(DELETE_USER, [id]);
-            if (result.rowCount === 0) {
-                throw new Error(`User with id ${id} not found`);
-            }
             logger.info(`User with id ${id} deleted`);
         } catch (error) {
-            // Check if this is a "not found" error we threw ourselves
-            if (error instanceof Error && error.message.includes('not found')) {
-                throw error; // Re-throw the original "not found" error
-            }
-            
-            logger.error(`Failed to delete user with id ${id}:`, error);
-            throw new Error(`Failed to delete user with id ${id}`);
+            logger.error(`Failed to delete user with id ${id}:`, error as Error);
+            throw new DbException(`Failed to delete user with id ${id}`, error as Error);
         }
     }
 
@@ -163,13 +150,14 @@ export class UserRepository implements IRepository<User>, Initializable {
             const result = await pool.query(GET_USER_BY_EMAIL, [email]);
             
             if (result.rows.length === 0) {
+                logger.error(`User with email ${email} not found`);
                 return null;
             }
             
             return new UserMapper().map(result.rows[0]);
         } catch (error) {
             logger.error(`Failed to find user by email ${email}:`, error);
-            throw new Error(`Failed to find user by email ${email}`);
+            throw new DbException(`Failed to find user by email ${email}`, error as Error);
         }
     }
 

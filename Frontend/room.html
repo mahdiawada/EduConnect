@@ -5,6 +5,31 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>JavaScript Course | EduConnect</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  <style>
+    .typing-dots::after {
+      content: '...';
+      animation: typing 1.4s infinite;
+    }
+    
+    @keyframes typing {
+      0%, 60% { opacity: 1; }
+      30% { opacity: 0.4; }
+    }
+    
+    .status-indicator {
+      transition: background-color 0.3s ease;
+    }
+    
+    .notification-enter {
+      animation: slideInRight 0.3s ease-out;
+    }
+    
+    @keyframes slideInRight {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+  </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
   <div class="flex h-screen">
@@ -21,49 +46,22 @@
       <div class="px-6 py-4">
         <button class="w-full bg-black text-white font-medium py-2 rounded-lg shadow hover:bg-gray-900 transition mb-6">Start Meeting</button>
         <div class="mb-6">
-          <div class="text-xs font-bold text-gray-500 mb-2">GROUP CHATS</div>
-          <ul class="space-y-1">
+          <div id="chats-header" class="text-xs font-bold text-gray-500 mb-2">GROUP CHATS</div>
+          <ul id="chats-list" class="space-y-1">
             <li>
-              <a href="#" class="flex items-center px-3 py-2 rounded-lg bg-blue-50 text-blue-700 font-semibold justify-between">
-                <span><span class="mr-2">#</span>General Discussion</span>
-                <span class="bg-red-500 text-white text-xs font-semibold px-2 py-0.5 rounded-full">5</span>
-              </a>
-            </li>
-            <li>
-              <a href="#" class="flex items-center px-3 py-2 rounded-lg hover:bg-gray-100 transition justify-between">
-                <span><span class="mr-2">#</span>Assignment Help</span>
-              </a>
-            </li>
-            <li>
-              <a href="#" class="flex items-center px-3 py-2 rounded-lg hover:bg-gray-100 transition justify-between">
-                <span><span class="mr-2">#</span>Project Teams</span>
-                <span class="bg-red-500 text-white text-xs font-semibold px-2 py-0.5 rounded-full">2</span>
-              </a>
+              <div class="flex items-center px-3 py-2 rounded-lg text-gray-500">
+                <span class="mr-2">#</span>
+                <span>Loading chats...</span>
+              </div>
             </li>
           </ul>
         </div>
         <div>
-          <div class="text-xs font-bold text-gray-500 mb-2">MEMBERS (4)</div>
-          <ul class="space-y-2">
-            <li class="flex items-center space-x-2">
-              <span class="w-2 h-2 bg-green-500 rounded-full"></span>
-              <span class="font-semibold text-gray-900">John Doe</span>
-              <span class="text-xs text-gray-500 ml-2">Instructor</span>
-            </li>
-            <li class="flex items-center space-x-2">
-              <span class="w-2 h-2 bg-green-500 rounded-full"></span>
-              <span class="text-gray-900">Sarah Wilson</span>
-              <span class="text-xs text-gray-500 ml-2">Student</span>
-            </li>
-            <li class="flex items-center space-x-2">
-              <span class="w-2 h-2 bg-yellow-400 rounded-full"></span>
-              <span class="text-gray-900">Mike Johnson</span>
-              <span class="text-xs text-gray-500 ml-2">Student</span>
-            </li>
-            <li class="flex items-center space-x-2">
+          <div id="members-header" class="text-xs font-bold text-gray-500 mb-2">MEMBERS (Loading...)</div>
+          <ul id="members-list" class="space-y-2">
+            <li class="flex items-center space-x-2 text-gray-500">
               <span class="w-2 h-2 bg-gray-300 rounded-full"></span>
-              <span class="text-gray-900">Emma Davis</span>
-              <span class="text-xs text-gray-500 ml-2">Student</span>
+              <span>Loading members...</span>
             </li>
           </ul>
         </div>
@@ -74,16 +72,22 @@
       <!-- Chat Header -->
       <div class="flex items-center justify-between px-4 sm:px-8 py-6 border-b border-gray-400 bg-white">
         <div class="flex items-center space-x-3">
+          <!-- Back to Dashboard button -->
+          <a href="dashboard.html" class="text-gray-500 hover:text-blue-600 mr-2" title="Back to Dashboard">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+            </svg>
+          </a>
           <!-- Sidebar toggle button (mobile) -->
           <button id="openSidebar" class="md:hidden mr-2 text-2xl text-gray-500 hover:text-gray-700 focus:outline-none">
             &#9776;
           </button>
           <span class="text-2xl">#</span>
-          <span class="font-bold text-xl">General Discussion</span>
+          <span id="current-chat-name" class="font-bold text-xl">Select a chat</span>
         </div>
         <div class="flex items-center space-x-3">
           <!-- Chat header actions -->
-          <a href="admin-dashboard.html" class="p-2 rounded hover:bg-gray-100 transition" title="Room Settings">
+          <a href="#" onclick="goToAdminDashboard()" class="p-2 rounded hover:bg-gray-100 transition" title="Room Settings">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M11.25 2.25c.966-1.285 2.534-1.285 3.5 0l.548.73a2.25 2.25 0 002.682.832l.857-.343c1.5-.6 2.964.864 2.364 2.364l-.343.857a2.25 2.25 0 00.832 2.682l.73.548c1.285.966 1.285 2.534 0 3.5l-.73.548a2.25 2.25 0 00-.832 2.682l.343.857c.6 1.5-.864 2.964-2.364 2.364l-.857-.343a2.25 2.25 0 00-2.682.832l-.548.73c-.966 1.285-2.534 1.285-3.5 0l-.548-.73a2.25 2.25 0 00-2.682-.832l-.857.343c-1.5.6-2.964-.864-2.364-2.364l.343-.857a2.25 2.25 0 00-.832-2.682l-.73-.548c-1.285-.966-1.285-2.534 0-3.5l.73-.548a2.25 2.25 0 00.832-2.682l-.343-.857c-.6-1.5.864-2.964 2.364-2.364l.857.343a2.25 2.25 0 002.682-.832l.548-.73z" />
@@ -130,8 +134,8 @@
       </div>
       <!-- Chat Input -->
       <div class="px-8 py-4 bg-white border-t border-gray-400 flex items-center">
-        <input type="text" placeholder="Message #general-discussion" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-blue-600 focus:border-blue-600">
-        <button class="ml-2 p-2 rounded bg-gray-200 hover:bg-gray-300 transition" title="Send">
+        <input id="message-input" type="text" placeholder="Select a chat to start messaging" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-blue-600 focus:border-blue-600" disabled>
+        <button id="send-button" onclick="sendMessage()" class="ml-2 p-2 rounded bg-gray-200 hover:bg-gray-300 transition" title="Send" disabled>
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M12 5l7 7-7 7" /></svg>
         </button>
       </div>
@@ -140,6 +144,16 @@
   <!-- Overlay for sidebar on mobile -->
   <div id="sidebarOverlay" class="fixed inset-0 z-30 bg-black bg-opacity-30 hidden md:hidden"></div>
   <script>
+    // API & State
+    const API_BASE = 'http://localhost:3000';
+    const token = localStorage.getItem('token');
+    const urlParams = new URLSearchParams(window.location.search);
+    const roomId = urlParams.get('id');
+
+    // Socket.IO Connection
+    let socket = null;
+    let typingTimeout = null;
+
     const sidebar = document.getElementById('sidebar');
     const sidebarOverlay = document.getElementById('sidebarOverlay');
     const openSidebar = document.getElementById('openSidebar');
@@ -162,6 +176,537 @@
       if (window.innerWidth >= 768) {
         hideSidebar();
       }
+    });
+
+    // Load room members
+    async function loadRoomMembers() {
+      if (!roomId) {
+        console.error('No room ID found in URL');
+        document.getElementById('members-header').textContent = 'MEMBERS (Error)';
+        document.getElementById('members-list').innerHTML = '<li class="flex items-center space-x-2 text-red-500"><span class="w-2 h-2 bg-red-500 rounded-full"></span><span>No room ID found</span></li>';
+        return;
+      }
+
+      try {
+        const response = await fetch(`${API_BASE}/rooms/${roomId}/members`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch members: ${response.status}`);
+        }
+
+        const members = await response.json();
+        renderMembers(members);
+      } catch (error) {
+        console.error('Error loading members:', error);
+        document.getElementById('members-header').textContent = 'MEMBERS (Error)';
+        document.getElementById('members-list').innerHTML = '<li class="flex items-center space-x-2 text-red-500"><span class="w-2 h-2 bg-red-500 rounded-full"></span><span>Error loading members</span></li>';
+      }
+    }
+
+    function renderMembers(members) {
+      const membersHeader = document.getElementById('members-header');
+      const membersList = document.getElementById('members-list');
+
+      if (members.length === 0) {
+        membersHeader.textContent = 'MEMBERS (0)';
+        membersList.innerHTML = '<li class="flex items-center space-x-2 text-gray-500"><span class="w-2 h-2 bg-gray-300 rounded-full"></span><span>No members found</span></li>';
+        return;
+      }
+
+      // Update header with member count
+      membersHeader.textContent = `MEMBERS (${members.length})`;
+
+      // Render member list
+      membersList.innerHTML = members.map(member => {
+        const isInstructor = member.role === 'instructor';
+        const statusColor = member.isActive ? 'bg-green-500' : 'bg-gray-300';
+        const fontWeight = isInstructor ? 'font-semibold' : '';
+        
+        return `
+          <li class="flex items-center space-x-2">
+            <span class="w-2 h-2 ${statusColor} rounded-full"></span>
+            <span class="${fontWeight} text-gray-900">${member.fullName}</span>
+            <span class="text-xs text-gray-500 ml-2">${isInstructor ? 'Instructor' : 'Student'}</span>
+          </li>
+        `;
+      }).join('');
+    }
+
+    // Navigation function for admin dashboard
+    function goToAdminDashboard() {
+      if (roomId) {
+        window.location.href = `admin-dashboard.html?id=${roomId}`;
+      } else {
+        alert('Room ID not found. Please reload this page with a valid room URL.');
+      }
+    }
+
+    // Current chat state
+    let currentChatId = null;
+
+    // Load room chats
+    async function loadRoomChats() {
+      if (!roomId) {
+        console.error('No room ID found in URL');
+        document.getElementById('chats-list').innerHTML = '<li><div class="flex items-center px-3 py-2 rounded-lg text-red-500"><span class="mr-2">#</span><span>No room ID found</span></div></li>';
+        return;
+      }
+
+      try {
+        const response = await fetch(`${API_BASE}/chats/room/${roomId}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch chats: ${response.status}`);
+        }
+
+        const chats = await response.json();
+        renderChats(chats);
+      } catch (error) {
+        console.error('Error loading chats:', error);
+        document.getElementById('chats-list').innerHTML = '<li><div class="flex items-center px-3 py-2 rounded-lg text-red-500"><span class="mr-2">#</span><span>Error loading chats</span></div></li>';
+      }
+    }
+
+    function renderChats(chats) {
+      const chatsList = document.getElementById('chats-list');
+
+      if (chats.length === 0) {
+        chatsList.innerHTML = '<li><div class="flex items-center px-3 py-2 rounded-lg text-gray-500"><span class="mr-2">#</span><span>No chats available</span></div></li>';
+        return;
+      }
+
+      // Render chat list
+      chatsList.innerHTML = chats.map((chat, index) => {
+        const isActive = currentChatId === chat.id;
+        const activeClasses = isActive ? 'bg-blue-50 text-blue-700 font-semibold' : 'hover:bg-gray-100 transition';
+        
+        return `
+          <li>
+            <a href="#" onclick="selectChat('${chat.id}', '${chat.name}')" class="flex items-center px-3 py-2 rounded-lg ${activeClasses} justify-between">
+              <span><span class="mr-2">#</span>${chat.name}</span>
+              <span class="bg-gray-400 text-white text-xs font-semibold px-2 py-0.5 rounded-full">0</span>
+            </a>
+          </li>
+        `;
+      }).join('');
+
+      // Auto-select first chat if none selected
+      if (!currentChatId && chats.length > 0) {
+        selectChat(chats[0].id, chats[0].name);
+      }
+    }
+
+    // Select a chat and load its messages
+    function selectChat(chatId, chatName) {
+      currentChatId = chatId;
+      
+      // Update current chat name in header
+      document.getElementById('current-chat-name').textContent = chatName;
+      
+      // Enable chat input
+      const messageInput = document.getElementById('message-input');
+      const sendButton = document.getElementById('send-button');
+      messageInput.disabled = false;
+      messageInput.placeholder = `Message #${chatName}`;
+      sendButton.disabled = false;
+      sendButton.classList.remove('bg-gray-200');
+      sendButton.classList.add('bg-blue-600', 'text-white', 'hover:bg-blue-700');
+      
+      // Update active state in chat list
+      loadRoomChats(); // Refresh to update active state
+      
+      // Load messages for this chat
+      loadChatMessages(chatId);
+    }
+
+    // Load messages for a specific chat
+    async function loadChatMessages(chatId) {
+      const messagesContainer = document.querySelector('.space-y-6');
+      messagesContainer.innerHTML = '<div class="text-center text-gray-500">Loading messages...</div>';
+
+      try {
+        const response = await fetch(`${API_BASE}/chats/${chatId}/messages`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch messages: ${response.status}`);
+        }
+
+        const messages = await response.json();
+        await renderMessages(messages);
+      } catch (error) {
+        console.error('Error loading messages:', error);
+        messagesContainer.innerHTML = '<div class="text-center text-red-500">Error loading messages</div>';
+      }
+    }
+
+    // Cache for user details to avoid repeated API calls
+    const userCache = new Map();
+
+    async function getUserDetails(userId) {
+      if (userCache.has(userId)) {
+        return userCache.get(userId);
+      }
+
+      try {
+        const response = await fetch(`${API_BASE}/users/${userId}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (response.ok) {
+          const user = await response.json();
+          userCache.set(userId, user);
+          return user;
+        } else {
+          // Fallback if user not found
+          const fallbackUser = { fullName: `User ${userId}`, email: '' };
+          userCache.set(userId, fallbackUser);
+          return fallbackUser;
+        }
+      } catch (error) {
+        console.error('Error fetching user details:', error);
+        const fallbackUser = { fullName: `User ${userId}`, email: '' };
+        userCache.set(userId, fallbackUser);
+        return fallbackUser;
+      }
+    }
+
+    async function renderMessages(messages) {
+      const messagesContainer = document.querySelector('.space-y-6');
+
+      if (messages.length === 0) {
+        messagesContainer.innerHTML = '<div class="text-center text-gray-500">No messages yet. Start the conversation!</div>';
+        return;
+      }
+
+      // Show loading state while fetching user details
+      messagesContainer.innerHTML = '<div class="text-center text-gray-500">Loading messages...</div>';
+
+      try {
+        // Fetch user details for all unique senders
+        const uniqueSenderIds = [...new Set(messages.map(msg => msg.senderId))];
+        await Promise.all(uniqueSenderIds.map(userId => getUserDetails(userId)));
+
+        // Render messages with user names
+        messagesContainer.innerHTML = messages.map(message => {
+          const messageTime = new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          const user = userCache.get(message.senderId);
+          const userName = user ? user.fullName : `User ${message.senderId}`;
+          
+          return `
+            <div class="flex items-start space-x-4">
+              <div class="w-10 h-10 bg-gray-200 rounded-full"></div>
+              <div>
+                <div class="flex items-center space-x-2 mb-1">
+                  <span class="font-bold text-gray-900">${userName}</span>
+                  <span class="text-xs text-gray-400">${messageTime}</span>
+                </div>
+                <div>${message.content}</div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      } catch (error) {
+        console.error('Error rendering messages:', error);
+        messagesContainer.innerHTML = '<div class="text-center text-red-500">Error loading messages</div>';
+      }
+    }
+
+    // Send message function
+    async function sendMessage() {
+      if (!currentChatId) {
+        alert('Please select a chat first');
+        return;
+      }
+
+      const messageInput = document.getElementById('message-input');
+      const content = messageInput.value.trim();
+
+      if (!content) {
+        alert('Please enter a message');
+        return;
+      }
+
+      // Stop typing indicator
+      if (socket && typingTimeout) {
+        clearTimeout(typingTimeout);
+        socket.emit('typing-stop', { roomId, chatId: currentChatId });
+        typingTimeout = null;
+      }
+
+      // Send via Socket.IO for real-time delivery
+      if (socket && socket.connected) {
+        console.log('Sending message via Socket.IO:', {
+          chatId: currentChatId,
+          content: content,
+          roomId: roomId
+        });
+        
+        socket.emit('send-message', {
+          chatId: currentChatId,
+          content: content,
+          roomId: roomId
+        });
+
+        // Clear input immediately
+        messageInput.value = '';
+      } else {
+        console.log('Socket not connected, using API fallback. Socket state:', {
+          socketExists: !!socket,
+          connected: socket ? socket.connected : false
+        });
+        // Fallback to API if socket is not connected
+        try {
+          const response = await fetch(`${API_BASE}/chats/${currentChatId}/messages`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ content: content })
+          });
+
+          if (!response.ok) {
+            throw new Error(`Failed to send message: ${response.status}`);
+          }
+
+          // Clear input and reload messages
+          messageInput.value = '';
+          loadChatMessages(currentChatId);
+        } catch (error) {
+          console.error('Error sending message:', error);
+          alert(`Error sending message: ${error.message}`);
+        }
+      }
+    }
+
+    // Add keyboard support for sending messages and typing indicators
+    document.addEventListener('DOMContentLoaded', () => {
+      const messageInput = document.getElementById('message-input');
+      
+      messageInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter' && !messageInput.disabled) {
+          sendMessage();
+        }
+      });
+
+      // Typing indicator
+      messageInput.addEventListener('input', () => {
+        if (!socket || !currentChatId) return;
+
+        // Send typing start
+        socket.emit('typing-start', { roomId, chatId: currentChatId });
+
+        // Clear existing timeout
+        if (typingTimeout) {
+          clearTimeout(typingTimeout);
+        }
+
+        // Set new timeout to stop typing indicator
+        typingTimeout = setTimeout(() => {
+          socket.emit('typing-stop', { roomId, chatId: currentChatId });
+          typingTimeout = null;
+        }, 1000);
+      });
+
+      messageInput.addEventListener('blur', () => {
+        if (socket && currentChatId && typingTimeout) {
+          clearTimeout(typingTimeout);
+          socket.emit('typing-stop', { roomId, chatId: currentChatId });
+          typingTimeout = null;
+        }
+      });
+    });
+
+    // Socket.IO Functions
+    function initializeSocket() {
+      if (!token) {
+        console.error('❌ No authentication token found');
+        return;
+      }
+      if (!roomId) {
+        console.error('❌ No room ID found in URL');
+        return;
+      }
+
+      console.log('🔌 Initializing Socket.IO connection...');
+      console.log('🎯 Room ID:', roomId);
+      console.log('🔑 Token present:', !!token);
+
+      socket = io('http://localhost:3000', {
+        auth: {
+          token: token
+        }
+      });
+
+      // Connection events
+      socket.on('connect', () => {
+        console.log('✅ Connected to server - Socket ID:', socket.id);
+        console.log('🏠 Attempting to join room:', roomId);
+        socket.emit('join-room', { roomId });
+      });
+
+      socket.on('disconnect', () => {
+        console.log('❌ Disconnected from server');
+      });
+
+      socket.on('error', (error) => {
+        console.error('🚨 Socket error:', error);
+        alert('Connection error: ' + error.message);
+      });
+
+      socket.on('connect_error', (error) => {
+        console.error('🚨 Connection error:', error);
+        alert('Failed to connect to server: ' + error.message);
+      });
+
+      // Room events
+      socket.on('room-joined', (data) => {
+        console.log('🎉 Successfully joined room:', data);
+        updateOnlineUsers(data.onlineUsers);
+      });
+
+      socket.on('user-joined', (data) => {
+        console.log('User joined:', data);
+        showNotification(`${data.userEmail} joined the room`, 'info');
+        // Refresh members list
+        loadRoomMembers();
+      });
+
+      socket.on('user-left', (data) => {
+        console.log('User left:', data);
+        showNotification(`${data.userEmail} left the room`, 'info');
+        // Refresh members list
+        loadRoomMembers();
+      });
+
+      // Message events
+      socket.on('new-message', async (messageData) => {
+        console.log('New message received:', messageData);
+        if (currentChatId === messageData.chatId) {
+          await displayNewMessage(messageData);
+        }
+      });
+
+      // Typing events
+      socket.on('user-typing', (data) => {
+        if (currentChatId === data.chatId && data.userId !== getUserIdFromToken()) {
+          showTypingIndicator(data);
+        }
+      });
+    }
+
+    async function displayNewMessage(messageData) {
+      const messagesContainer = document.querySelector('.space-y-6');
+      if (!messagesContainer) return;
+
+      const messageDiv = document.createElement('div');
+      messageDiv.className = 'flex items-start space-x-4';
+      
+      const messageTime = new Date(messageData.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      
+      // Get user details for the sender
+      let senderName = messageData.senderEmail;
+      try {
+        const user = await getUserDetails(messageData.senderId);
+        senderName = user.fullName || user.email || messageData.senderEmail;
+      } catch (error) {
+        console.error('Error getting user details for real-time message:', error);
+      }
+      
+      messageDiv.innerHTML = `
+        <div class="w-10 h-10 bg-gray-200 rounded-full"></div>
+        <div>
+          <div class="flex items-center space-x-2 mb-1">
+            <span class="font-bold text-gray-900">${senderName}</span>
+            <span class="text-xs text-gray-400">${messageTime}</span>
+          </div>
+          <div>${messageData.content}</div>
+        </div>
+      `;
+      
+      messagesContainer.appendChild(messageDiv);
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    function getUserIdFromToken() {
+      if (!token) return null;
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        return payload.userID;
+      } catch (error) {
+        console.error('Error parsing token:', error);
+        return null;
+      }
+    }
+
+    function updateOnlineUsers(onlineUsers) {
+      // Update member list to show online status
+      const memberElements = document.querySelectorAll('[data-member-id]');
+      memberElements.forEach(element => {
+        const memberId = element.getAttribute('data-member-id');
+        const statusIndicator = element.querySelector('.status-indicator');
+        if (statusIndicator) {
+          const isOnline = onlineUsers.some(user => user.userId === memberId);
+          statusIndicator.className = `status-indicator w-3 h-3 rounded-full ${isOnline ? 'bg-green-500' : 'bg-gray-400'}`;
+        }
+      });
+    }
+
+    function showNotification(message, type = 'info') {
+      // Simple notification - you can enhance this
+      const notification = document.createElement('div');
+      notification.className = `fixed top-4 right-4 px-4 py-2 rounded-lg text-white z-50 ${
+        type === 'info' ? 'bg-blue-500' : type === 'error' ? 'bg-red-500' : 'bg-green-500'
+      }`;
+      notification.textContent = message;
+      document.body.appendChild(notification);
+      
+      setTimeout(() => {
+        notification.remove();
+      }, 3000);
+    }
+
+    function showTypingIndicator(data) {
+      const messagesContainer = document.querySelector('.space-y-6');
+      if (!messagesContainer) return;
+
+      // Remove existing typing indicator
+      const existingIndicator = messagesContainer.querySelector('.typing-indicator');
+      if (existingIndicator) {
+        existingIndicator.remove();
+      }
+
+      if (data.isTyping) {
+        const typingDiv = document.createElement('div');
+        typingDiv.className = 'typing-indicator flex items-start space-x-4';
+        typingDiv.innerHTML = `
+          <div class="w-10 h-10 bg-gray-200 rounded-full"></div>
+          <div>
+            <div class="flex items-center space-x-2 mb-1">
+              <span class="font-bold text-gray-900">${data.userEmail}</span>
+              <span class="text-xs text-gray-400">typing</span>
+            </div>
+            <div class="text-gray-500 italic">
+              <span class="typing-dots">typing...</span>
+            </div>
+          </div>
+        `;
+        messagesContainer.appendChild(typingDiv);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      }
+    }
+
+    // Load chats and members when page loads
+    window.addEventListener('DOMContentLoaded', () => {
+      loadRoomMembers();
+      loadRoomChats();
+      initializeSocket();
     });
   </script>
 </body>
