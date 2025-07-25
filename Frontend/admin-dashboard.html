@@ -12,6 +12,166 @@
     const urlParams = new URLSearchParams(window.location.search);
     const roomId = urlParams.get('id');
 
+    // ===== AVATAR UTILITY FUNCTIONS =====
+    
+    /**
+     * Generate initials from a full name (Facebook style)
+     * @param {string} fullName - User's full name
+     * @returns {string} - Initials (max 2 characters)
+     */
+    function generateInitials(fullName) {
+      if (!fullName || typeof fullName !== 'string') {
+        return '?';
+      }
+      
+      const words = fullName.trim().split(' ').filter(word => word.length > 0);
+      
+      if (words.length === 0) return '?';
+      if (words.length === 1) return words[0].charAt(0).toUpperCase();
+      
+      // Take first letter of first and last word
+      return (words[0].charAt(0) + words[words.length - 1].charAt(0)).toUpperCase();
+    }
+
+    /**
+     * Generate a background color based on user name (consistent colors)
+     * @param {string} name - User's name
+     * @returns {string} - CSS background color class
+     */
+    function generateAvatarColor(name) {
+      const colors = [
+        'bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-pink-500', 
+        'bg-yellow-500', 'bg-indigo-500', 'bg-red-500', 'bg-teal-500',
+        'bg-orange-500', 'bg-cyan-500'
+      ];
+      
+      if (!name) return 'bg-gray-500';
+      
+      // Generate consistent color based on name hash
+      let hash = 0;
+      for (let i = 0; i < name.length; i++) {
+        hash = name.charCodeAt(i) + ((hash << 5) - hash);
+      }
+      return colors[Math.abs(hash) % colors.length];
+    }
+
+    /**
+     * Create avatar HTML element with fallback system
+     * @param {Object} user - User object with fullName, avatarUrl
+     * @param {string} cssClasses - CSS classes for the avatar container
+     * @param {string} imgClasses - Additional CSS classes for the img element
+     * @returns {string} - HTML string for avatar
+     */
+    function createAvatarHTML(user, cssClasses = 'w-10 h-10', imgClasses = '') {
+      const userName = user.fullName || user.username || user.name || 'Unknown User';
+      const initials = generateInitials(userName);
+      const colorClass = generateAvatarColor(userName);
+      const avatarId = `avatar-${Math.random().toString(36).substr(2, 9)}`;
+      
+      if (user.avatarUrl && user.avatarUrl.trim()) {
+        // User has avatar URL - show image with fallback to initials
+        return `
+          <div class="relative ${cssClasses} rounded-full overflow-hidden flex-shrink-0">
+            <img 
+              id="${avatarId}" 
+              src="${user.avatarUrl}" 
+              alt="${userName}'s avatar" 
+              class="w-full h-full object-cover ${imgClasses}"
+              onload="this.style.display='block'; this.nextElementSibling.style.display='none';"
+              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+              style="display: block;"
+            />
+            <div class="absolute inset-0 ${colorClass} text-white flex items-center justify-center font-semibold text-sm" style="display: none;">
+              ${initials}
+            </div>
+          </div>
+        `;
+      } else {
+        // No avatar URL - show initials directly
+        return `
+          <div class="${cssClasses} ${colorClass} rounded-full text-white flex items-center justify-center font-semibold text-sm flex-shrink-0">
+            ${initials}
+          </div>
+        `;
+      }
+    }
+
+    // ===== END AVATAR UTILITIES =====
+
+    // ===== STATISTICS FUNCTIONS =====
+
+    // Load room statistics
+    async function loadRoomStatistics() {
+      if (!roomId) {
+        console.error('No room ID available for statistics');
+        return;
+      }
+
+      try {
+        // Load room details
+        const roomResponse = await fetch(`${API_BASE}/rooms/${roomId}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (roomResponse.ok) {
+          const room = await roomResponse.json();
+          document.getElementById('header-room-name').textContent = room.name;
+          
+          // Format creation date
+          const createdDate = new Date(room.createdAt).toLocaleDateString();
+          document.getElementById('roomCreatedDate').textContent = createdDate;
+        }
+
+        // Load member count
+        const membersResponse = await fetch(`${API_BASE}/rooms/${roomId}/members`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (membersResponse.ok) {
+          const members = await membersResponse.json();
+          document.getElementById('totalMembers').textContent = members.length;
+        }
+
+        // Load chats count and total messages
+        const chatsResponse = await fetch(`${API_BASE}/chats/room/${roomId}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (chatsResponse.ok) {
+          const chats = await chatsResponse.json();
+          document.getElementById('totalChats').textContent = chats.length;
+
+          // Count total messages across all chats
+          let totalMessageCount = 0;
+          for (const chat of chats) {
+            try {
+              const messagesResponse = await fetch(`${API_BASE}/chats/${chat.id}/messages`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+              });
+              if (messagesResponse.ok) {
+                const messages = await messagesResponse.json();
+                totalMessageCount += messages.length;
+              }
+            } catch (error) {
+              console.warn(`Failed to load messages for chat ${chat.id}:`, error);
+            }
+          }
+          document.getElementById('totalMessages').textContent = totalMessageCount;
+        }
+
+      } catch (error) {
+        console.error('Error loading room statistics:', error);
+        // Set error indicators
+        document.getElementById('totalMembers').textContent = '?';
+        document.getElementById('totalChats').textContent = '?';
+        document.getElementById('totalMessages').textContent = '?';
+        document.getElementById('roomCreatedDate').textContent = 'Error';
+        document.getElementById('header-room-name').textContent = 'Error loading room';
+      }
+    }
+
+    // ===== END STATISTICS =====
+
     // Tab switching
     function showTab(tab) {
       document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
@@ -26,6 +186,44 @@
         loadMembers();
       } else if (tab === 'settings') {
         loadRoomSettings();
+      }
+    }
+
+    // Initialize the admin dashboard
+    async function initializeAdminDashboard() {
+      // Check if user has permission to access admin dashboard
+      if (!roomId) {
+        alert('Room ID not found. Please access this page through a valid room.');
+        window.location.href = 'dashboard.html';
+        return;
+      }
+
+      try {
+        // Check if user is an instructor in this room
+        const response = await fetch(`${API_BASE}/rooms/${roomId}/check-role`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to check user role');
+        }
+
+        const roleData = await response.json();
+        
+        if (!roleData.isInstructor) {
+          // User is not an instructor, redirect to dashboard
+          alert('Access Denied: Only instructors can access the admin dashboard.');
+          window.location.href = 'dashboard.html';
+          return;
+        }
+
+        // User is authorized, proceed with initialization
+        loadRoomStatistics();
+        showTab('members'); // Default to members tab
+      } catch (error) {
+        console.error('Error checking user role:', error);
+        alert('Error checking permissions. Redirecting to dashboard.');
+        window.location.href = 'dashboard.html';
       }
     }
     // Kick modal
@@ -57,6 +255,7 @@
         if (response.ok) {
           closeKickModal();
           loadMembers(); // Refresh the members list
+          loadRoomStatistics(); // Refresh statistics
         } else {
           throw new Error(`Failed to remove member: ${response.status}`);
         }
@@ -72,10 +271,44 @@
     function closeGroupChatModal() {
       document.getElementById('group-chat-modal').classList.add('hidden');
     }
-    function createGroupChat() {
-      const name = document.getElementById('group-chat-name').value;
-      if (name) alert('Created group chat: ' + name + ' (static demo)');
-      closeGroupChatModal();
+    async function createGroupChat() {
+      const name = document.getElementById('group-chat-name').value.trim();
+      
+      if (!name) {
+        alert('Please enter a chat group name');
+        return;
+      }
+
+      if (!roomId) {
+        alert('Room ID not found');
+        return;
+      }
+
+      try {
+        const response = await fetch(`${API_BASE}/chats`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            name: name,
+            roomId: roomId
+          })
+        });
+
+        if (response.ok) {
+          closeGroupChatModal();
+          loadChats(); // Refresh chat list
+          loadRoomStatistics(); // Refresh statistics
+          document.getElementById('group-chat-name').value = ''; // Clear form
+        } else {
+          throw new Error(`Failed to create chat group: ${response.status}`);
+        }
+      } catch (error) {
+        console.error('Error creating chat group:', error);
+        alert(`Error creating chat group: ${error.message}`);
+      }
     }
     
     // Chat Management Functions
@@ -215,6 +448,7 @@
         
         closeEditChatModal();
         loadChats(); // Refresh the chat list
+        loadRoomStatistics(); // Refresh statistics
       } catch (error) {
         console.error('Error updating chat:', error);
         alert(`Error updating chat group: ${error.message}`);
@@ -237,6 +471,7 @@
         }
         
         loadChats(); // Refresh the chat list
+        loadRoomStatistics(); // Refresh statistics
       } catch (error) {
         console.error('Error deleting chat:', error);
         alert(`Error deleting chat group: ${error.message}`);
@@ -252,6 +487,9 @@
         window.location.href = 'dashboard.html';
       }
     }
+
+    // Initialize the admin dashboard when page loads
+    document.addEventListener('DOMContentLoaded', initializeAdminDashboard);
     
     // Load room members
     async function loadMembers() {
@@ -290,11 +528,8 @@
         return;
       }
       
-      // Update member count in stats
-      const totalMembersElement = document.querySelector('.grid .bg-white:first-child .text-2xl');
-      if (totalMembersElement) {
-        totalMembersElement.textContent = members.length;
-      }
+      // Update member count in stats (handled by loadRoomStatistics now)
+      document.getElementById('totalMembers').textContent = members.length;
       
       membersTableBody.innerHTML = members.map(member => {
         const isInstructor = member.role === 'instructor';
@@ -302,12 +537,14 @@
         const lastActive = 'Recently'; // We can enhance this later with real last activity tracking
         const status = member.isActive ? 'Active' : 'Inactive';
         
+        const avatarHTML = createAvatarHTML(member, 'h-8 w-8');
+        
         return `
           <tr class="border-b">
-            <td class="py-2 flex items-center gap-2">
-              <span class="inline-block h-8 w-8 rounded-full bg-gray-200"></span>
+            <td class="py-3 flex items-center gap-3">
+              ${avatarHTML}
               <div>
-                <div class="font-bold">${member.fullName}</div>
+                <div class="font-bold text-gray-900">${member.fullName}</div>
                 <div class="text-xs text-gray-500">${member.email}</div>
               </div>
             </td>
@@ -316,8 +553,8 @@
                 ${isInstructor ? 'Admin' : 'Student'}
               </span>
             </td>
-            <td>${joinDate}</td>
-            <td>${lastActive}</td>
+            <td class="text-sm text-gray-600">${joinDate}</td>
+            <td class="text-sm text-gray-600">${lastActive}</td>
             <td>
               <span class="px-2 py-1 rounded text-xs ${status === 'Active' ? 'bg-black text-white' : 'bg-gray-100 text-gray-700'}">
                 ${status}
@@ -516,19 +753,22 @@
   </div>
 
   <!-- Stats Cards -->
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 w-full">
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-4 w-full">
     <div class="bg-white rounded-lg shadow p-4 flex flex-col items-center w-full">
       <span class="text-gray-500">Total Members</span>
-      <span class="text-2xl font-bold">3</span>
+      <span id="totalMembers" class="text-2xl font-bold">-</span>
     </div>
     <div class="bg-white rounded-lg shadow p-4 flex flex-col items-center w-full">
-      <span class="text-gray-500">Pending Requests</span>
-      <span class="text-2xl font-bold">2</span>
+      <span class="text-gray-500">Total Chats</span>
+      <span id="totalChats" class="text-2xl font-bold">-</span>
     </div>
     <div class="bg-white rounded-lg shadow p-4 flex flex-col items-center w-full">
-      <span class="text-gray-500">This Week</span>
-      <span class="text-2xl font-bold">12</span>
-      <span class="text-xs text-gray-400">New messages</span>
+      <span class="text-gray-500">Total Messages</span>
+      <span id="totalMessages" class="text-2xl font-bold">-</span>
+    </div>
+    <div class="bg-white rounded-lg shadow p-4 flex flex-col items-center w-full">
+      <span class="text-gray-500">Room Created</span>
+      <span id="roomCreatedDate" class="text-sm font-bold">-</span>
     </div>
   </div>
 

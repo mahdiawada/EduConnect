@@ -115,20 +115,13 @@ export class ChatService {
         try {
             // 1. Get the chat details
             const chat = await this.chatRepo.get(chatId);
-            
-            // 2. Get the room the chat belongs to
-             const room = await this.roomRepo.get(chat.getRoomId()); // You would need to inject RoomRepository
-
-            // 3. Check if the user is either the chat creator or the room instructor
+            const room = await this.roomRepo.get(chat.getRoomId());
             const isChatCreator = chat.getCreatedBy() === userId;
-            // const isRoomInstructor = room.getInstructorId() === userId; // This line would cause an error as roomRepo is not injected
 
-            if (!isChatCreator) { // Removed isRoomInstructor as roomRepo is not available
+            if (!isChatCreator) { 
                 // If they are neither, they are not authorized
                 throw new Error("You are not authorized to delete this chat.");
             }
-
-            // 4. If they are authorized, delete the chat
             return await this.chatRepo.delete(chatId);
 
         } catch (error) {

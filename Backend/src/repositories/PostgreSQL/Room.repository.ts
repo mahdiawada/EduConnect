@@ -199,6 +199,5 @@ export class RoomRepository implements IRepository<Room>, Initializable {
 
 export async function createRoomRepository(): Promise<RoomRepository> {
     const userRepository = new RoomRepository();
-    await userRepository.init();
     return userRepository;
 }

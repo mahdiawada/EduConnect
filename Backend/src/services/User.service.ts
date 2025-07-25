@@ -27,34 +27,28 @@ export class UserService {
         return (await this.getRepo()).create(userWithHashedPassword);
     }
 
-    // get user
     public async getUserById(userId: id): Promise<User> {
         return (await this.getRepo()).get(userId);
     }
 
-    // get all users
     public async getAllUsers(): Promise<User[]> {
         return (await this.getRepo()).getAll();
     }
 
-    // update user
     public async updateUser(user: User): Promise<void> {
         return (await this.getRepo()).update(user);
     }
 
-    // delete user
     public async deleteUser(userId: id): Promise<void> {
         return (await this.getRepo()).delete(userId);
     }
 
-    // Validate user credentials with proper password comparison
     async validateUser(email: string, password: string): Promise<id> {  
         const user = await (await this.getRepo()).getByEmail(email);
         if (!user) {
             throw new NotFoundException("User not found");
         }
         
-        // Compare the provided password with the stored hash
         const isValidPassword = await this.comparePassword(password, user.getPasswordHash());
         if (!isValidPassword) {
             throw new NotFoundException("Invalid password");
@@ -63,17 +57,14 @@ export class UserService {
         return user.getId();
     }
 
-    // Hash a password using bcrypt
     private async hashPassword(password: string): Promise<string> {
         return await bcrypt.hash(password, this.SALT_ROUNDS);
     }
 
-    // Compare a plain text password with a hash
     private async comparePassword(password: string, hash: string): Promise<boolean> {
         return await bcrypt.compare(password, hash);
     }
 
-    // Update user password with hashing
     public async updateUserPassword(userId: id, newPassword: string): Promise<void> {
         const user = await this.getUserById(userId);
         const hashedPassword = await this.hashPassword(newPassword);
@@ -81,7 +72,6 @@ export class UserService {
         await this.updateUser(user);
     }
 
-    // Check if a password meets security requirements
     public validatePasswordStrength(password: string): { isValid: boolean; errors: string[] } {
         const errors: string[] = [];
         

@@ -21,12 +21,22 @@ export class AuthenticationController {
             const token = this.authService.generateToken(userId);
             
             // Get user data to return with token
-            // const user = await this.userService.getUserById(userId);
+            const user = await this.userService.getUserById(userId);
 
             return res.status(200).json({ 
                 message: "Login successful",
                 token: token,
-                // user: user
+                user: {
+                    id: user.getId(),
+                    username: user.getUsername(),
+                    email: user.getEmail(),
+                    fullName: user.getFullName(),
+                    avatarUrl: user.getAvatarUrl(),
+                    bio: user.getBio(),
+                    isActive: user.getIsActive(),
+                    createdAt: user.getCreatedAt(),
+                    updatedAt: user.getUpdatedAt()
+                }
             });
 
         } catch (error) {
@@ -40,7 +50,34 @@ export class AuthenticationController {
         }
     }
 
-    logout() {
-        // TODO: Implement logout method
+    async logout(req: Request, res: Response) {
+        try {
+            // Extract token from Authorization header
+            const authHeader = req.headers.authorization;
+            if (!authHeader || !authHeader.startsWith('Bearer ')) {
+                return res.status(400).json({ error: 'No token provided' });
+            }
+            
+            const token = authHeader.substring(7); // Remove 'Bearer ' prefix
+            
+            // Verify token is valid before blacklisting (optional security check)
+            try {
+                this.authService.verifyToken(token);
+            } catch (error) {
+                return res.status(400).json({ error: 'Invalid token' });
+            }
+            
+            // Blacklist the token
+            this.authService.blacklistToken(token);
+            
+            logger.info('User logged out successfully');
+            return res.status(200).json({ 
+                message: "Logout successful" 
+            });
+            
+        } catch (error) {
+            logger.error('Logout failed', error);
+            return res.status(500).json({ error: 'Internal server error during logout' });
+        }
     }
 }

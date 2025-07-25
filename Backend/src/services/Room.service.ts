@@ -135,32 +135,22 @@ export class RoomService {
             if (!requesterMember || requesterMember.getRole() !== 'instructor') {
                 throw new Error("Only instructors can remove members from the room");
             }
-
-            // Get the member to be removed
             const memberToRemove = await (await this.getRoomMemberRepo()).get(memberIdToRemove);
             if (!memberToRemove || memberToRemove.getRoomId() !== roomId) {
                 throw new Error("Member not found in this room");
             }
-
-            // Prevent removing instructors
             if (memberToRemove.getRole() === 'instructor') {
                 throw new Error("Cannot remove instructors from the room");
             }
-
-            // Remove the member
             await (await this.getRoomMemberRepo()).delete(memberIdToRemove);
         } catch (error) {
             throw new Error(`Failed to remove member: ${error}`);
         }
     }
 
-    // Get room members with user details
     public async getRoomMembers(roomId: string): Promise<any[]> {
         try {
-            // Get all room members
             const roomMembers = await (await this.getRoomMemberRepo()).getByRoomId(roomId);
-            
-            // Get user details for each member
             const membersWithDetails = await Promise.all(
                 roomMembers.map(async (member) => {
                     const user = await (await this.getUserRepo()).get(member.getUserId());
@@ -249,6 +239,16 @@ export class RoomService {
             return members.some((member: any) => member.getUserId() === userId);
         } catch (error) {
             console.error('Error checking room membership:', error);
+            return false;
+        }
+    }
+
+    public async isUserInstructorInRoom(userId: string, roomId: string): Promise<boolean> {
+        try {
+            const member = await (await this.getRoomMemberRepo()).getByRoomAndUser(roomId, userId);
+            return member?.getRole() === 'instructor';
+        } catch (error) {
+            console.error('Error checking instructor role:', error);
             return false;
         }
     }

@@ -1,8 +1,6 @@
 import { Server, Socket } from 'socket.io';
 import { AuthenticationService } from './Authentication.service';
 import { RoomService } from './Room.service';
-import { Chat } from '../models/Chat.model';
-import { Message } from '../models/Messages.model';
 import { MessageBuilder } from '../models/builders/Messages.builder';
 import { createChatRepository } from '../repositories/PostgreSQL/Chat.repository';
 import { createMessagesRepository } from '../repositories/PostgreSQL/Messages.repository';
@@ -17,18 +15,10 @@ interface AuthenticatedSocket extends Socket {
     userEmail?: string;
 }
 
-interface SocketRoomData {
-    roomId: string;
-    userId: string;
-    userEmail: string;
-}
-
-// Store active connections
 const activeUsers = new Map<string, { socketId: string; roomId?: string; userEmail: string }>();
-const roomUsers = new Map<string, Set<string>>(); // roomId -> Set of userIds
+const roomUsers = new Map<string, Set<string>>(); 
 
 export function setupSocketIO(io: Server) {
-    // Socket authentication middleware
     io.use(async (socket: AuthenticatedSocket, next) => {
         try {
             const token = socket.handshake.auth.token;
@@ -147,7 +137,6 @@ export function setupSocketIO(io: Server) {
 
                 // Save message to database
                 const messagesRepository = await createMessagesRepository();
-                const chatRepository = await createChatRepository();
                 
                 // Verify user is member of the room
                 const roomRepository = await createRoomRepository();

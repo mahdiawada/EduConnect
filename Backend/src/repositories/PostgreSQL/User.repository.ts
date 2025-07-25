@@ -180,6 +180,5 @@ export class UserRepository implements IRepository<User>, Initializable {
 
 export async function createUserRepository(): Promise<UserRepository>{
     const userRepo = new UserRepository();
-    await userRepo.init();
     return userRepo;
 }

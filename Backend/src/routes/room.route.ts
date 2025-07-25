@@ -9,9 +9,7 @@ import { authenticate } from '../middlewares/auth';
 
 const router = Router();
 
-// Use an async IIFE to handle top-level await
 (async () => {
-    // Dependency Injection setup
     const roomRepository = await createRoomRepository();
     const roomMemberRepository = await createRoomMemberRepository();
     const userRepository = await createUserRepository();
@@ -29,6 +27,7 @@ const router = Router();
     router.get('/:roomId/members', asyncHandler(roomController.getRoomMembers.bind(roomController)));
     router.delete('/:roomId/members/:memberId', asyncHandler(roomController.removeMember.bind(roomController)));
     router.post('/:roomId/invite', authenticate, asyncHandler(roomController.emailInvite.bind(roomController)));
+    router.get('/:roomId/check-role', authenticate, asyncHandler(roomController.checkUserRole.bind(roomController)));
 })();
 
 export default router;

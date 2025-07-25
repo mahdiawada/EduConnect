@@ -206,4 +206,31 @@ Mentor Platform Team`,
         }
     }
 
+    public async checkUserRole(req: Request, res: Response): Promise<void> {
+        const roomId = req.params.roomId;
+        const userId = (req as any).userId;
+
+        if (!roomId) {
+            throw new BadRequestException('Room ID is required in the path');
+        }
+
+        if (!userId) {
+            throw new BadRequestException('User authentication required');
+        }
+
+        try {
+            const isInstructor = await this.roomService.isUserInstructorInRoom(userId, roomId);
+            res.status(200).json({ 
+                isInstructor,
+                role: isInstructor ? 'instructor' : 'student'
+            });
+        } catch (error) {
+            res.status(404).json({ 
+                isInstructor: false,
+                role: 'student',
+                message: 'User is not a member of this room'
+            });
+        }
+    }
+
 } 

@@ -276,6 +276,5 @@ export class RoomMemberRepository implements IRepository<RoomMember>, Initializa
 
 export async function createRoomMemberRepository(): Promise<RoomMemberRepository> {
     const userRepository = new RoomMemberRepository();
-    await userRepository.init();
     return userRepository;
 }

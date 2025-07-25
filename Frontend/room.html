@@ -6,6 +6,8 @@
   <title>JavaScript Course | EduConnect</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  <!-- Jitsi Meet IFrame API -->
+  <script src="https://meet.jit.si/external_api.js"></script>
   <style>
     .typing-dots::after {
       content: '...';
@@ -29,6 +31,26 @@
       from { transform: translateX(100%); opacity: 0; }
       to { transform: translateX(0); opacity: 1; }
     }
+
+    /* Video meeting styles */
+    #video-meeting-container {
+      transition: all 0.3s ease;
+    }
+
+    .video-meeting-expanded {
+      height: 400px !important;
+    }
+
+    .video-meeting-minimized {
+      height: 60px !important;
+    }
+
+    #jitsi-meet-frame {
+      width: 100%;
+      height: 100%;
+      border: none;
+      border-radius: 8px;
+    }
   </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
@@ -38,13 +60,13 @@
       <div class="flex items-center justify-between px-6 py-4 border-b border-gray-400">
         <div class="flex items-center space-x-2">
           <span class="text-2xl">📖</span>
-          <span class="font-bold text-lg">JavaScript Course</span>
+          <span id="roomTitle" class="font-bold text-lg">Loading...</span>
         </div>
         <!-- Close button for mobile -->
         <button id="closeSidebar" class="md:hidden absolute top-4 right-4 text-2xl text-gray-400 hover:text-gray-700 font-bold hidden">&times;</button>
       </div>
       <div class="px-6 py-4">
-        <button class="w-full bg-black text-white font-medium py-2 rounded-lg shadow hover:bg-gray-900 transition mb-6">Start Meeting</button>
+        <button id="start-meeting-btn" class="w-full bg-black text-white font-medium py-2 rounded-lg shadow hover:bg-gray-900 transition mb-6">Start Meeting</button>
         <div class="mb-6">
           <div id="chats-header" class="text-xs font-bold text-gray-500 mb-2">GROUP CHATS</div>
           <ul id="chats-list" class="space-y-1">
@@ -87,7 +109,7 @@
         </div>
         <div class="flex items-center space-x-3">
           <!-- Chat header actions -->
-          <a href="#" onclick="goToAdminDashboard()" class="p-2 rounded hover:bg-gray-100 transition" title="Room Settings">
+          <a href="#" onclick="goToAdminDashboard()" class="p-2 rounded hover:bg-gray-100 transition" title="Admin Dashboard (Instructors Only)">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M11.25 2.25c.966-1.285 2.534-1.285 3.5 0l.548.73a2.25 2.25 0 002.682.832l.857-.343c1.5-.6 2.964.864 2.364 2.364l-.343.857a2.25 2.25 0 00.832 2.682l.73.548c1.285.966 1.285 2.534 0 3.5l-.73.548a2.25 2.25 0 00-.832 2.682l.343.857c.6 1.5-.864 2.964-2.364 2.364l-.857-.343a2.25 2.25 0 00-2.682.832l-.548.73c-.966 1.285-2.534 1.285-3.5 0l-.548-.73a2.25 2.25 0 00-2.682-.832l-.857.343c-1.5.6-2.964-.864-2.364-2.364l.343-.857a2.25 2.25 0 00-.832-2.682l-.73-.548c-1.285-.966-1.285-2.534 0-3.5l.73-.548a2.25 2.25 0 00.832-2.682l-.343-.857c-.6-1.5.864-2.964 2.364-2.364l.857.343a2.25 2.25 0 002.682-.832l.548-.73z" />
@@ -96,39 +118,40 @@
           </a>
         </div>
       </div>
+
+      <!-- Video Meeting Container -->
+      <div id="video-meeting-container" class="hidden bg-white border-b border-gray-400">
+        <div class="flex items-center justify-between px-4 py-2 bg-gray-50 border-b border-gray-300">
+          <div class="flex items-center space-x-2">
+            <span class="text-lg">📹</span>
+            <span class="font-semibold text-gray-700">Video Meeting</span>
+            <span id="meeting-status" class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">Live</span>
+          </div>
+          <div class="flex items-center space-x-2">
+            <button id="minimize-meeting" class="p-1 text-gray-500 hover:text-gray-700" title="Minimize">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            <button id="close-meeting" class="p-1 text-red-500 hover:text-red-700" title="End Meeting">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div id="jitsi-meet-frame-container" class="video-meeting-expanded">
+          <iframe id="jitsi-meet-frame" allow="camera; microphone; fullscreen; speaker; display-capture"></iframe>
+        </div>
+      </div>
+
       <!-- Chat Messages -->
       <div class="flex-1 overflow-y-auto px-8 py-6 bg-gray-50">
-        <div class="space-y-6">
-          <div class="flex items-start space-x-4">
-            <div class="w-10 h-10 bg-gray-200 rounded-full"></div>
-            <div>
-              <div class="flex items-center space-x-2 mb-1">
-                <span class="font-bold text-gray-900">John Doe</span>
-                <span class="bg-gray-100 text-gray-700 text-xs font-semibold px-2 py-0.5 rounded">Instructor</span>
-                <span class="text-xs text-gray-400">10:30 AM</span>
-              </div>
-              <div>Welcome everyone to our JavaScript course! Let's start with the basics.</div>
-            </div>
-          </div>
-          <div class="flex items-start space-x-4">
-            <div class="w-10 h-10 bg-gray-200 rounded-full"></div>
-            <div>
-              <div class="flex items-center space-x-2 mb-1">
-                <span class="font-bold text-gray-900">Sarah Wilson</span>
-                <span class="text-xs text-gray-400">10:32 AM</span>
-              </div>
-              <div>Thank you! I'm excited to learn.</div>
-            </div>
-          </div>
-          <div class="flex items-start space-x-4">
-            <div class="w-10 h-10 bg-gray-200 rounded-full"></div>
-            <div>
-              <div class="flex items-center space-x-2 mb-1">
-                <span class="font-bold text-gray-900">Mike Johnson</span>
-                <span class="text-xs text-gray-400">10:35 AM</span>
-              </div>
-              <div>When will we cover React?</div>
-            </div>
+        <div id="messagesContainer" class="space-y-6">
+          <div class="text-center text-gray-500 py-16">
+            <div class="text-6xl mb-4">💬</div>
+            <h3 class="text-xl font-semibold text-gray-700 mb-2">Welcome to the room!</h3>
+            <p class="text-gray-500">Select a chat from the sidebar to start messaging</p>
           </div>
         </div>
       </div>
@@ -150,9 +173,100 @@
     const urlParams = new URLSearchParams(window.location.search);
     const roomId = urlParams.get('id');
 
+    // ===== AVATAR UTILITY FUNCTIONS =====
+    
+    /**
+     * Generate initials from a full name (Facebook style)
+     * @param {string} fullName - User's full name
+     * @returns {string} - Initials (max 2 characters)
+     */
+    function generateInitials(fullName) {
+      if (!fullName || typeof fullName !== 'string') {
+        return '?';
+      }
+      
+      const words = fullName.trim().split(' ').filter(word => word.length > 0);
+      
+      if (words.length === 0) return '?';
+      if (words.length === 1) return words[0].charAt(0).toUpperCase();
+      
+      // Take first letter of first and last word
+      return (words[0].charAt(0) + words[words.length - 1].charAt(0)).toUpperCase();
+    }
+
+    /**
+     * Generate a background color based on user name (consistent colors)
+     * @param {string} name - User's name
+     * @returns {string} - CSS background color class
+     */
+    function generateAvatarColor(name) {
+      const colors = [
+        'bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-pink-500', 
+        'bg-yellow-500', 'bg-indigo-500', 'bg-red-500', 'bg-teal-500',
+        'bg-orange-500', 'bg-cyan-500'
+      ];
+      
+      if (!name) return 'bg-gray-500';
+      
+      // Generate consistent color based on name hash
+      let hash = 0;
+      for (let i = 0; i < name.length; i++) {
+        hash = name.charCodeAt(i) + ((hash << 5) - hash);
+      }
+      return colors[Math.abs(hash) % colors.length];
+    }
+
+    /**
+     * Create avatar HTML element with fallback system
+     * @param {Object} user - User object with fullName, avatarUrl
+     * @param {string} cssClasses - CSS classes for the avatar container
+     * @param {string} imgClasses - Additional CSS classes for the img element
+     * @returns {string} - HTML string for avatar
+     */
+    function createAvatarHTML(user, cssClasses = 'w-10 h-10', imgClasses = '') {
+      const userName = user.fullName || user.username || user.name || 'Unknown User';
+      const initials = generateInitials(userName);
+      const colorClass = generateAvatarColor(userName);
+      const avatarId = `avatar-${Math.random().toString(36).substr(2, 9)}`;
+      
+      if (user.avatarUrl && user.avatarUrl.trim()) {
+        // User has avatar URL - show image with fallback to initials
+        return `
+          <div class="relative ${cssClasses} rounded-full overflow-hidden flex-shrink-0">
+            <img 
+              id="${avatarId}" 
+              src="${user.avatarUrl}" 
+              alt="${userName}'s avatar" 
+              class="w-full h-full object-cover ${imgClasses}"
+              onload="this.style.display='block'; this.nextElementSibling.style.display='none';"
+              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+              style="display: block;"
+            />
+            <div class="absolute inset-0 ${colorClass} text-white flex items-center justify-center font-semibold text-sm" style="display: none;">
+              ${initials}
+            </div>
+          </div>
+        `;
+      } else {
+        // No avatar URL - show initials directly
+        return `
+          <div class="${cssClasses} ${colorClass} rounded-full text-white flex items-center justify-center font-semibold text-sm flex-shrink-0">
+            ${initials}
+          </div>
+        `;
+      }
+    }
+
+    // ===== END AVATAR UTILITIES =====
+
     // Socket.IO Connection
     let socket = null;
     let typingTimeout = null;
+
+    // Jitsi Meet variables
+    let jitsiMeetApi = null;
+    let isMeetingActive = false;
+    let meetingRoomName = null;
 
     const sidebar = document.getElementById('sidebar');
     const sidebarOverlay = document.getElementById('sidebarOverlay');
@@ -218,28 +332,62 @@
       // Update header with member count
       membersHeader.textContent = `MEMBERS (${members.length})`;
 
-      // Render member list
+      // Render member list with avatars
       membersList.innerHTML = members.map(member => {
         const isInstructor = member.role === 'instructor';
         const statusColor = member.isActive ? 'bg-green-500' : 'bg-gray-300';
         const fontWeight = isInstructor ? 'font-semibold' : '';
+        const avatarHTML = createAvatarHTML(member, 'w-8 h-8');
         
         return `
-          <li class="flex items-center space-x-2">
-            <span class="w-2 h-2 ${statusColor} rounded-full"></span>
-            <span class="${fontWeight} text-gray-900">${member.fullName}</span>
-            <span class="text-xs text-gray-500 ml-2">${isInstructor ? 'Instructor' : 'Student'}</span>
+          <li class="flex items-center space-x-2" data-member-id="${member.userId}">
+            <div class="relative">
+              ${avatarHTML}
+              <span class="absolute -bottom-1 -right-1 w-3 h-3 ${statusColor} rounded-full border-2 border-white status-indicator"></span>
+            </div>
+            <div class="flex-1">
+              <span class="${fontWeight} text-gray-900 text-sm">${member.fullName}</span>
+              <span class="text-xs text-gray-500 ml-1">${isInstructor ? '(Instructor)' : '(Student)'}</span>
+            </div>
           </li>
         `;
       }).join('');
     }
 
     // Navigation function for admin dashboard
-    function goToAdminDashboard() {
-      if (roomId) {
-        window.location.href = `admin-dashboard.html?id=${roomId}`;
-      } else {
+    async function goToAdminDashboard() {
+      if (!roomId) {
         alert('Room ID not found. Please reload this page with a valid room URL.');
+        return;
+      }
+
+      console.log('Checking admin access for room:', roomId);
+
+      try {
+        // Check if user is an instructor in this room
+        const response = await fetch(`${API_BASE}/rooms/${roomId}/check-role`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to check user role');
+        }
+
+        const roleData = await response.json();
+        console.log('Role check result:', roleData);
+        
+        if (roleData.isInstructor) {
+          // User is an instructor, allow access to admin dashboard
+          console.log('Access granted - user is instructor');
+          window.location.href = `admin-dashboard.html?id=${roomId}`;
+        } else {
+          // User is not an instructor, show access denied message
+          console.log('Access denied - user is not instructor');
+          alert('Access Denied: Only instructors can access the admin dashboard.');
+        }
+      } catch (error) {
+        console.error('Error checking user role:', error);
+        alert('Error checking permissions. Please try again.');
       }
     }
 
@@ -288,7 +436,7 @@
           <li>
             <a href="#" onclick="selectChat('${chat.id}', '${chat.name}')" class="flex items-center px-3 py-2 rounded-lg ${activeClasses} justify-between">
               <span><span class="mr-2">#</span>${chat.name}</span>
-              <span class="bg-gray-400 text-white text-xs font-semibold px-2 py-0.5 rounded-full">0</span>
+              
             </a>
           </li>
         `;
@@ -325,7 +473,7 @@
 
     // Load messages for a specific chat
     async function loadChatMessages(chatId) {
-      const messagesContainer = document.querySelector('.space-y-6');
+      const messagesContainer = document.getElementById('messagesContainer');
       messagesContainer.innerHTML = '<div class="text-center text-gray-500">Loading messages...</div>';
 
       try {
@@ -377,7 +525,7 @@
     }
 
     async function renderMessages(messages) {
-      const messagesContainer = document.querySelector('.space-y-6');
+      const messagesContainer = document.getElementById('messagesContainer');
 
       if (messages.length === 0) {
         messagesContainer.innerHTML = '<div class="text-center text-gray-500">No messages yet. Start the conversation!</div>';
@@ -392,15 +540,16 @@
         const uniqueSenderIds = [...new Set(messages.map(msg => msg.senderId))];
         await Promise.all(uniqueSenderIds.map(userId => getUserDetails(userId)));
 
-        // Render messages with user names
+        // Render messages with user avatars
         messagesContainer.innerHTML = messages.map(message => {
           const messageTime = new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
           const user = userCache.get(message.senderId);
           const userName = user ? user.fullName : `User ${message.senderId}`;
+          const avatarHTML = user ? createAvatarHTML(user, 'w-10 h-10') : `<div class="w-10 h-10 bg-gray-400 rounded-full flex items-center justify-center text-white font-semibold text-sm">?</div>`;
           
           return `
             <div class="flex items-start space-x-4">
-              <div class="w-10 h-10 bg-gray-200 rounded-full"></div>
+              ${avatarHTML}
               <div>
                 <div class="flex items-center space-x-2 mb-1">
                   <span class="font-bold text-gray-900">${userName}</span>
@@ -546,28 +695,26 @@
 
       // Connection events
       socket.on('connect', () => {
-        console.log('✅ Connected to server - Socket ID:', socket.id);
-        console.log('🏠 Attempting to join room:', roomId);
         socket.emit('join-room', { roomId });
       });
 
       socket.on('disconnect', () => {
-        console.log('❌ Disconnected from server');
+        console.log('Disconnected from server');
       });
 
       socket.on('error', (error) => {
-        console.error('🚨 Socket error:', error);
+        console.error('Socket error:', error);
         alert('Connection error: ' + error.message);
       });
 
       socket.on('connect_error', (error) => {
-        console.error('🚨 Connection error:', error);
+        console.error('Connection error:', error);
         alert('Failed to connect to server: ' + error.message);
       });
 
       // Room events
       socket.on('room-joined', (data) => {
-        console.log('🎉 Successfully joined room:', data);
+        console.log('Successfully joined room:', data);
         updateOnlineUsers(data.onlineUsers);
       });
 
@@ -602,7 +749,7 @@
     }
 
     async function displayNewMessage(messageData) {
-      const messagesContainer = document.querySelector('.space-y-6');
+      const messagesContainer = document.getElementById('messagesContainer');
       if (!messagesContainer) return;
 
       const messageDiv = document.createElement('div');
@@ -612,15 +759,18 @@
       
       // Get user details for the sender
       let senderName = messageData.senderEmail;
+      let avatarHTML = `<div class="w-10 h-10 bg-gray-400 rounded-full flex items-center justify-center text-white font-semibold text-sm">?</div>`;
+      
       try {
         const user = await getUserDetails(messageData.senderId);
         senderName = user.fullName || user.email || messageData.senderEmail;
+        avatarHTML = createAvatarHTML(user, 'w-10 h-10');
       } catch (error) {
         console.error('Error getting user details for real-time message:', error);
       }
       
       messageDiv.innerHTML = `
-        <div class="w-10 h-10 bg-gray-200 rounded-full"></div>
+        ${avatarHTML}
         <div>
           <div class="flex items-center space-x-2 mb-1">
             <span class="font-bold text-gray-900">${senderName}</span>
@@ -659,7 +809,7 @@
     }
 
     function showNotification(message, type = 'info') {
-      // Simple notification - you can enhance this
+      // Simple notification
       const notification = document.createElement('div');
       notification.className = `fixed top-4 right-4 px-4 py-2 rounded-lg text-white z-50 ${
         type === 'info' ? 'bg-blue-500' : type === 'error' ? 'bg-red-500' : 'bg-green-500'
@@ -673,7 +823,7 @@
     }
 
     function showTypingIndicator(data) {
-      const messagesContainer = document.querySelector('.space-y-6');
+      const messagesContainer = document.getElementById('messagesContainer');
       if (!messagesContainer) return;
 
       // Remove existing typing indicator
@@ -685,8 +835,16 @@
       if (data.isTyping) {
         const typingDiv = document.createElement('div');
         typingDiv.className = 'typing-indicator flex items-start space-x-4';
+        
+        // Try to get user avatar from cache, fallback to generic avatar
+        let avatarHTML = `<div class="w-10 h-10 bg-gray-400 rounded-full flex items-center justify-center text-white font-semibold text-sm">?</div>`;
+        const user = userCache.get(data.userId);
+        if (user) {
+          avatarHTML = createAvatarHTML(user, 'w-10 h-10');
+        }
+        
         typingDiv.innerHTML = `
-          <div class="w-10 h-10 bg-gray-200 rounded-full"></div>
+          ${avatarHTML}
           <div>
             <div class="flex items-center space-x-2 mb-1">
               <span class="font-bold text-gray-900">${data.userEmail}</span>
@@ -702,11 +860,112 @@
       }
     }
 
+    // Load room details
+    async function loadRoomDetails() {
+      if (!roomId) {
+        document.getElementById('roomTitle').textContent = 'Invalid Room';
+        return;
+      }
+
+      try {
+        const response = await fetch(`${API_BASE}/rooms/${roomId}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (response.ok) {
+          const room = await response.json();
+          document.getElementById('roomTitle').textContent = room.name || 'Unknown Room';
+        } else {
+          document.getElementById('roomTitle').textContent = 'Room Not Found';
+        }
+      } catch (error) {
+        console.error('Error loading room details:', error);
+        document.getElementById('roomTitle').textContent = 'Error Loading Room';
+      }
+    }
+
     // Load chats and members when page loads
     window.addEventListener('DOMContentLoaded', () => {
+      loadRoomDetails();
       loadRoomMembers();
       loadRoomChats();
       initializeSocket();
+    });
+
+    // JITSI MEET IFRAME API INTEGRATION
+    document.addEventListener('DOMContentLoaded', () => {
+      const startMeetingBtn = document.getElementById('start-meeting-btn');
+      const videoMeetingContainer = document.getElementById('video-meeting-container');
+      const jitsiFrame = document.getElementById('jitsi-meet-frame');
+      const minimizeBtn = document.getElementById('minimize-meeting');
+      const closeBtn = document.getElementById('close-meeting');
+      const jitsiFrameContainer = document.getElementById('jitsi-meet-frame-container');
+
+      // Helper: Generate a unique room name based on roomId
+      function getJitsiRoomName() {
+        return `MentorRoom_${roomId}`;
+      }
+
+      // Start Meeting
+      startMeetingBtn && startMeetingBtn.addEventListener('click', () => {
+        if (!roomId) {
+          alert('Room ID not found. Cannot start meeting.');
+          return;
+        }
+        if (isMeetingActive) {
+          videoMeetingContainer.classList.remove('hidden');
+          jitsiFrameContainer.classList.remove('video-meeting-minimized');
+          jitsiFrameContainer.classList.add('video-meeting-expanded');
+          return;
+        }
+        // Show the meeting container
+        videoMeetingContainer.classList.remove('hidden');
+        jitsiFrameContainer.classList.remove('video-meeting-minimized');
+        jitsiFrameContainer.classList.add('video-meeting-expanded');
+        // Set up the Jitsi IFrame
+        const domain = 'meet.jit.si';
+        meetingRoomName = getJitsiRoomName();
+        const options = {
+          roomName: meetingRoomName,
+          parentNode: jitsiFrameContainer,
+          width: '100%',
+          height: 400,
+          userInfo: {
+            displayName: localStorage.getItem('fullName') || 'Mentor User'
+          },
+          configOverwrite: {
+            startWithAudioMuted: false,
+            startWithVideoMuted: false
+          },
+          interfaceConfigOverwrite: {
+            SHOW_JITSI_WATERMARK: false,
+            SHOW_WATERMARK_FOR_GUESTS: false
+          }
+        };
+        // Remove any previous iframe
+        jitsiFrameContainer.innerHTML = '';
+        jitsiMeetApi = new JitsiMeetExternalAPI(domain, options);
+        isMeetingActive = true;
+      });
+
+      // Minimize Meeting
+      minimizeBtn && minimizeBtn.addEventListener('click', () => {
+        if (!isMeetingActive) return;
+        jitsiFrameContainer.classList.remove('video-meeting-expanded');
+        jitsiFrameContainer.classList.add('video-meeting-minimized');
+      });
+
+      // Close Meeting
+      closeBtn && closeBtn.addEventListener('click', () => {
+        if (jitsiMeetApi) {
+          jitsiMeetApi.dispose();
+          jitsiMeetApi = null;
+        }
+        isMeetingActive = false;
+        videoMeetingContainer.classList.add('hidden');
+        // Optionally, clear the iframe container
+        jitsiFrameContainer.innerHTML = '<iframe id="jitsi-meet-frame" allow="camera; microphone; fullscreen; speaker; display-capture"></iframe>';
+      });
     });
   </script>
 </body>

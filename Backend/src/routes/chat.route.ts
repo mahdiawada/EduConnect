@@ -5,7 +5,6 @@ import { asyncHandler } from '../middlewares/asyncHandler';
 
 const router = Router();
 
-// Dependency Injection
 const chatService = new ChatService();
 const chatController = new ChatController(chatService);
 

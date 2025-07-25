@@ -7,22 +7,23 @@
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-50 min-h-screen flex flex-col">
-  <!-- Navigation Bar -->
+  
   <nav class="bg-white border-b border-gray-200 shadow-sm">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-      <!-- Logo -->
+      
       <a href="index.html" class="text-2xl font-bold text-blue-600">EduConnect</a>
-      <!-- User Avatar and Logout -->
       <div class="flex items-center space-x-4">
         <div class="flex items-center space-x-2">
-          <img id="userAvatar" src="https://randomuser.me/api/portraits/men/32.jpg" alt="User Avatar" class="w-10 h-10 rounded-full border-2 border-blue-200 object-cover">
+          <div id="userAvatar" class="w-10 h-10 bg-gray-300 rounded-full border-2 border-blue-200 flex items-center justify-center text-white font-semibold text-sm">
+            ?
+          </div>
         </div>
         <button id="logoutBtn" class="bg-red-600 text-white font-medium px-4 py-2 rounded shadow hover:bg-red-700 transition">Logout</button>
       </div>
     </div>
   </nav>
 
-  <!-- Loading Screen -->
+  
   <div id="loadingScreen" class="flex-1 flex items-center justify-center">
     <div class="text-center">
       <svg class="animate-spin -ml-1 mr-3 h-10 w-10 text-blue-700 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -33,7 +34,7 @@
     </div>
   </div>
 
-  <!-- Main Content -->
+  
   <main id="mainContent" class="flex-1 hidden">
     <div class="max-w-3xl mx-auto px-4 mt-12">
       <div class="mb-6">
@@ -41,34 +42,33 @@
         <p class="mt-2 text-gray-600 text-xl font-normal">Manage your educational rooms and connect with your students.</p>
       </div>
 
-      <!-- Error Message -->
+      
       <div id="errorMessage" class="hidden bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6">
         <span id="errorText"></span>
       </div>
 
-      <!-- Dashboard Stats Cards -->
+      
       <div class="mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <!-- Card 1: Create Room -->
         <div class="bg-white border border-gray-200 rounded-xl p-6 flex flex-col items-center text-center">
           <div class="text-4xl text-blue-600 mb-2">+</div>
           <div class="font-bold text-lg mb-1">Create Room</div>
           <div class="text-gray-500 text-sm">Start a new course</div>
           <button class="bg-blue-600 text-white font-medium px-4 py-1 rounded shadow hover:bg-blue-700 transition text-sm openCreateRoomModal mt-4">Create Room</button>
         </div>
-        <!-- Card 2: Join Room -->
+    
         <div class="bg-white border border-gray-200 rounded-xl p-6 flex flex-col items-center text-center">
           <div class="text-4xl text-green-600 mb-2">📥</div>
           <div class="font-bold text-lg mb-1">Join Room</div>
           <div class="text-gray-500 text-sm">Enter invite code</div>
           <button class="bg-green-600 text-white font-medium px-4 py-1 rounded shadow hover:bg-green-700 transition text-sm openJoinRoomModal mt-4">Join Room</button>
         </div>
-        <!-- Card 3: Your Rooms -->
+        
         <div class="bg-white border border-gray-200 rounded-xl p-6 flex flex-col items-center text-center">
           <div class="text-4xl text-purple-600 mb-2">🏫</div>
           <div class="font-bold text-lg mb-1"><span id="roomCount">0</span> Rooms</div>
-          <div class="text-gray-500 text-sm">Created & joined</div>
+          <div class="text-gray-500 text-sm">Created</div>
         </div>
-        <!-- Card 4: Messages -->
+        
         <div class="bg-white border border-gray-200 rounded-xl p-6 flex flex-col items-center text-center">
           <div class="text-4xl text-red-600 mb-2">💬</div>
           <div class="font-bold text-lg mb-1">Messages</div>
@@ -76,7 +76,7 @@
         </div>
       </div>
 
-      <!-- Your Rooms Section -->
+      
       <div class="mt-16">
         <div class="flex items-center justify-between mb-6">
           <h2 class="text-2xl font-bold text-gray-900">Your Rooms</h2>
@@ -90,7 +90,7 @@
           </div>
         </div>
         
-        <!-- Rooms Loading -->
+        
         <div id="roomsLoading" class="text-center py-8">
           <svg class="animate-spin h-8 w-8 text-blue-700 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -99,7 +99,7 @@
           <p class="text-gray-600 mt-2">Loading your rooms...</p>
         </div>
 
-        <!-- No Rooms Message -->
+        
         <div id="noRooms" class="hidden text-center py-12 bg-white rounded-xl border border-gray-200">
           <div class="text-6xl mb-4">🏫</div>
           <h3 class="text-xl font-semibold text-gray-900 mb-2">No rooms yet</h3>
@@ -110,17 +110,17 @@
           </div>
         </div>
 
-        <!-- Rooms Grid -->
+        
         <div id="roomsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
       </div>
 
-      <!-- Joined Rooms Section -->
+      
       <div class="mt-16">
         <div class="flex items-center justify-between mb-6">
           <h2 class="text-2xl font-bold text-gray-900">Joined Rooms</h2>
         </div>
         
-        <!-- Joined Rooms Loading -->
+        
         <div id="joinedRoomsLoading" class="text-center py-8">
           <svg class="animate-spin h-8 w-8 text-blue-700 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -129,7 +129,7 @@
           <p class="text-gray-600 mt-2">Loading joined rooms...</p>
         </div>
 
-        <!-- No Joined Rooms Message -->
+        
         <div id="noJoinedRooms" class="hidden text-center py-12 bg-white rounded-xl border border-gray-200">
           <div class="text-6xl mb-4">🧑‍🎓</div>
           <h3 class="text-xl font-semibold text-gray-900 mb-2">You haven't joined any rooms yet</h3>
@@ -137,19 +137,19 @@
           <button class="openJoinRoomModal bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition">Join a Room</button>
         </div>
 
-        <!-- Joined Rooms Grid -->
+        
         <div id="joinedRoomsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
       </div>
     </div>
   </main>
 
-  <!-- Create Room Modal -->
+  
   <div id="createRoomModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 hidden">
     <div class="bg-white rounded-xl shadow-lg w-full max-w-md p-8 relative">
       <button id="closeCreateRoomModal" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-2xl font-bold">&times;</button>
       <h2 class="text-2xl font-bold mb-6 text-gray-900">Create a Room</h2>
       
-      <!-- Create Room Error Message -->
+      
       <div id="createRoomError" class="hidden bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
         <span id="createRoomErrorText"></span>
       </div>
@@ -170,13 +170,13 @@
     </div>
   </div>
 
-  <!-- Join Room Modal -->
+  
   <div id="joinRoomModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 hidden">
     <div class="bg-white rounded-xl shadow-lg w-full max-w-md p-8 relative">
       <button id="closeJoinRoomModal" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-2xl font-bold">&times;</button>
       <h2 class="text-2xl font-bold mb-6 text-gray-900">Join a Room</h2>
       
-      <!-- Join Room Error Message -->
+      
       <div id="joinRoomError" class="hidden bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
         <span id="joinRoomErrorText"></span>
       </div>
@@ -199,21 +199,106 @@
   </div>
 
   <script>
-    // API Base URL
+    
     const API_BASE = 'http://localhost:3000';
     
-    // Authentication check
+    
     const token = localStorage.getItem('token');
     if (!token) {
       window.location.href = 'login.html';
     }
 
-    // Global variables
+    
+    function generateInitials(fullName) {
+      if (!fullName || typeof fullName !== 'string') {
+        return '?';
+      }
+      
+      const words = fullName.trim().split(' ').filter(word => word.length > 0);
+      
+      if (words.length === 0) return '?';
+      if (words.length === 1) return words[0].charAt(0).toUpperCase();
+      
+      return (words[0].charAt(0) + words[words.length - 1].charAt(0)).toUpperCase();
+    }
+
+    
+    function generateAvatarColor(name) {
+      const colors = [
+        'bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-pink-500', 
+        'bg-yellow-500', 'bg-indigo-500', 'bg-red-500', 'bg-teal-500',
+        'bg-orange-500', 'bg-cyan-500'
+      ];
+      
+      if (!name) return 'bg-gray-500';
+      
+      let hash = 0;
+      for (let i = 0; i < name.length; i++) {
+        hash = name.charCodeAt(i) + ((hash << 5) - hash);
+      }
+      return colors[Math.abs(hash) % colors.length];
+    }
+
+    
+    function createAvatarHTML(user, cssClasses = 'w-10 h-10', imgClasses = '') {
+      const userName = user.fullName || user.username || user.name || 'Unknown User';
+      const initials = generateInitials(userName);
+      const colorClass = generateAvatarColor(userName);
+      const avatarId = `avatar-${Math.random().toString(36).substr(2, 9)}`;
+      
+      if (user.avatarUrl && user.avatarUrl.trim()) {
+        
+        return `
+          <div class="relative ${cssClasses} rounded-full overflow-hidden">
+            <img 
+              id="${avatarId}" 
+              src="${user.avatarUrl}" 
+              alt="${userName}'s avatar" 
+              class="w-full h-full object-cover ${imgClasses}"
+              onload="this.style.display='block'; this.nextElementSibling.style.display='none';"
+              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+              style="display: block;"
+            />
+            <div class="absolute inset-0 ${colorClass} text-white flex items-center justify-center font-semibold text-sm" style="display: none;">
+              ${initials}
+            </div>
+          </div>
+        `;
+      } else {
+        
+        return `
+          <div class="${cssClasses} ${colorClass} rounded-full text-white flex items-center justify-center font-semibold text-sm">
+            ${initials}
+          </div>
+        `;
+      }
+    }
+
+    
+    function updateAvatarElement(elementId, user, cssClasses = 'w-10 h-10') {
+      const element = document.getElementById(elementId);
+      if (!element) {
+        console.error('Avatar element not found:', elementId);
+        return;
+      }
+      
+      
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = createAvatarHTML(user, cssClasses);
+      const newAvatarElement = tempDiv.firstElementChild;
+      
+      
+      newAvatarElement.id = elementId;
+      
+      element.parentNode.replaceChild(newAvatarElement, element);
+    }
+
+    
     let currentUser = null;
     let userRooms = [];
     let joinedRooms = [];
 
-    // Initialize dashboard
+    
     async function initDashboard() {
       try {
         await loadUserData();
@@ -229,14 +314,37 @@
       }
     }
 
-    // Load user data
+    
     async function loadUserData() {
       try {
-        // Try to get user from localStorage first
+        
         const storedUser = localStorage.getItem('user');
+        
         if (storedUser) {
           currentUser = JSON.parse(storedUser);
           updateUserDisplay();
+        } else {
+          
+          try {
+            
+            const tokenPayload = JSON.parse(atob(token.split('.')[1]));
+            
+            if (tokenPayload.userID) {
+              const response = await fetch(`${API_BASE}/users/${tokenPayload.userID}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+              });
+              
+              if (response.ok) {
+                currentUser = await response.json();
+                
+                
+                localStorage.setItem('user', JSON.stringify(currentUser));
+                updateUserDisplay();
+              }
+            }
+          } catch (apiError) {
+            console.error('Error fetching user from API:', apiError);
+          }
         }
 
       } catch (error) {
@@ -244,7 +352,7 @@
       }
     }
 
-    // Load user rooms
+    
     async function loadUserRooms() {
       try {
         const response = await fetch(`${API_BASE}/rooms/my-rooms`, {
@@ -272,7 +380,7 @@
       }
     }
 
-    // Load joined rooms
+    
     async function loadJoinedRooms() {
       const joinedRoomsLoading = document.getElementById('joinedRoomsLoading');
       try {
@@ -301,19 +409,14 @@
       }
     }
 
-    // Update user display
+    
     function updateUserDisplay() {
       if (currentUser) {
         document.getElementById('welcomeMessage').textContent = `Welcome back, ${currentUser.fullName || currentUser.username}!`;
-        
-        // Update avatar if user has one
-        if (currentUser.avatarUrl) {
-          document.getElementById('userAvatar').src = currentUser.avatarUrl;
-        }
+        updateAvatarElement('userAvatar', currentUser, 'w-10 h-10 border-2 border-blue-200');
       }
     }
 
-    // Update rooms display
     function updateRoomsDisplay() {
       const roomsGrid = document.getElementById('roomsGrid');
       const noRooms = document.getElementById('noRooms');
@@ -343,7 +446,7 @@
       }
     }
 
-    // Create room card HTML
+    
     function createRoomCard(room, isInstructor) {
       const createdDate = new Date(room.createdAt).toLocaleDateString();
       return `
@@ -383,7 +486,6 @@
       `;
     }
 
-    // Show/hide functions
     function showMainContent() {
       document.getElementById('loadingScreen').classList.add('hidden');
       document.getElementById('mainContent').classList.remove('hidden');
@@ -398,7 +500,6 @@
       document.getElementById('errorMessage').classList.remove('hidden');
     }
 
-    // Modal functions
     function openModal(modalId) {
       document.getElementById(modalId).classList.remove('hidden');
     }
@@ -407,21 +508,38 @@
       document.getElementById(modalId).classList.add('hidden');
     }
 
-    // Event listeners
     document.addEventListener('DOMContentLoaded', initDashboard);
 
-    // Logout functionality
     const logoutBtn = document.getElementById('logoutBtn');
-    logoutBtn.addEventListener('click', () => {
-      // Clear user data from storage
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      
-      // Redirect to login page
-      window.location.href = 'login.html';
+    logoutBtn.addEventListener('click', async () => {
+      try {
+        logoutBtn.disabled = true;
+        logoutBtn.textContent = 'Logging out...';
+        
+        const response = await fetch(`${API_BASE}/auth/logout`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (response.ok) {
+          console.log('Successfully logged out from server');
+        } else {
+          console.warn('Logout request failed, but proceeding with local cleanup');
+        }
+        
+      } catch (error) {
+        console.error('Logout request failed:', error);
+      } finally {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        
+        window.location.href = 'login.html';
+      }
     });
 
-    // Modal event listeners
     document.querySelectorAll('.openCreateRoomModal').forEach(btn => {
       btn.addEventListener('click', () => openModal('createRoomModal'));
     });
@@ -438,7 +556,6 @@
       closeModal('joinRoomModal');
     });
 
-    // Close modals when clicking outside
     ['createRoomModal', 'joinRoomModal'].forEach(modalId => {
       document.getElementById(modalId).addEventListener('click', (e) => {
         if (e.target === e.currentTarget) {
@@ -447,7 +564,6 @@
       });
     });
 
-    // Create room form
     document.getElementById('createRoomForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       
@@ -472,7 +588,7 @@
           closeModal('createRoomModal');
           e.target.reset();
           document.getElementById('createRoomError').classList.add('hidden');
-          await loadUserRooms(); // Refresh rooms list
+          await loadUserRooms();
         } else {
           const error = await response.json();
           document.getElementById('createRoomErrorText').textContent = error.message || 'Failed to create room';
@@ -514,7 +630,7 @@
           e.target.reset();
           await loadJoinedRooms(); // Refresh joined rooms list
           
-          // Optionally redirect to the joined room
+          
           window.location.href = `room.html?id=${joinedRoom.id}`;
         } else {
           const error = await response.json();
@@ -534,8 +650,28 @@
     });
 
     // Navigation function for admin dashboard
-    function goToAdminDashboard(roomId) {
-      window.location.href = `admin-dashboard.html?id=${roomId}`;
+    async function goToAdminDashboard(roomId) {
+      try {
+        // Check if user is an instructor in this room
+        const response = await fetch(`${API_BASE}/rooms/${roomId}/check-role`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to check user role');
+        }
+
+        const roleData = await response.json();
+        
+        if (roleData.isInstructor) {
+          window.location.href = `admin-dashboard.html?id=${roomId}`;
+        } else {
+          alert('Access Denied: Only instructors can access the admin dashboard.');
+        }
+      } catch (error) {
+        console.error('Error checking user role:', error);
+        alert('Error checking permissions. Please try again.');
+      }
     }
   </script>
 </body>
