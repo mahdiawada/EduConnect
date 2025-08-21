@@ -195,18 +195,15 @@
   </footer>
 
   <script>
-    // Check if user is already logged in
     const token = localStorage.getItem('token');
     const user = localStorage.getItem('user');
     
     if (token && user) {
-      // User is logged in, show user section
       const userData = JSON.parse(user);
       document.getElementById('authButtons').classList.add('hidden');
       document.getElementById('userSection').classList.remove('hidden');
       document.getElementById('userWelcome').textContent = `Welcome, ${userData.fullName || userData.username}!`;
       
-      // Update hero buttons
       document.getElementById('heroButtons').classList.add('hidden');
       document.getElementById('loggedInHeroButtons').classList.remove('hidden');
     }

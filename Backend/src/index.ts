@@ -14,7 +14,6 @@ import { setupSocketIO } from './services/Socket.service';
 const app = express();
 const server = createServer(app);
 
-// Socket.IO setup with CORS
 const io = new SocketIOServer(server, {
     cors: {
         origin: [
@@ -24,18 +23,17 @@ const io = new SocketIOServer(server, {
             "http://127.0.0.1:5500",
             "http://localhost:5503",
             "http://127.0.0.1:5503",
-            "http://127.0.0.1:5504"
+            "http://127.0.0.1:5504",
+            "http://127.0.0.1:5506"
         ],
         methods: ["GET", "POST"],
         credentials: true
     }
 });
 
-// Initialize Socket.IO handlers
 setupSocketIO(io);
 
 app.use(helmet());
-
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -48,7 +46,8 @@ app.use(cors({
         "http://127.0.0.1:5500",
         "http://localhost:5503",
         "http://127.0.0.1:5503",
-        "http://127.0.0.1:5504"
+        "http://127.0.0.1:5504",
+        "http://127.0.0.1:5506"
     ],
     credentials: true
 }));
@@ -57,12 +56,10 @@ app.use(requestLogger);
 
 app.use('/', routes);
 
-// config 404 handler
 app.use((req, res) => {
     res.status(404).json({error: "Not Found"});
 })
 
-// config error handler
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
     if(err instanceof HttpException) {
         res.status(err.status).json({message: err.message});

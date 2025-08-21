@@ -167,19 +167,11 @@
   <!-- Overlay for sidebar on mobile -->
   <div id="sidebarOverlay" class="fixed inset-0 z-30 bg-black bg-opacity-30 hidden md:hidden"></div>
   <script>
-    // API & State
     const API_BASE = 'http://localhost:3000';
     const token = localStorage.getItem('token');
     const urlParams = new URLSearchParams(window.location.search);
     const roomId = urlParams.get('id');
-
-    // ===== AVATAR UTILITY FUNCTIONS =====
     
-    /**
-     * Generate initials from a full name (Facebook style)
-     * @param {string} fullName - User's full name
-     * @returns {string} - Initials (max 2 characters)
-     */
     function generateInitials(fullName) {
       if (!fullName || typeof fullName !== 'string') {
         return '?';
@@ -190,15 +182,9 @@
       if (words.length === 0) return '?';
       if (words.length === 1) return words[0].charAt(0).toUpperCase();
       
-      // Take first letter of first and last word
       return (words[0].charAt(0) + words[words.length - 1].charAt(0)).toUpperCase();
     }
 
-    /**
-     * Generate a background color based on user name (consistent colors)
-     * @param {string} name - User's name
-     * @returns {string} - CSS background color class
-     */
     function generateAvatarColor(name) {
       const colors = [
         'bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-pink-500', 
@@ -208,7 +194,6 @@
       
       if (!name) return 'bg-gray-500';
       
-      // Generate consistent color based on name hash
       let hash = 0;
       for (let i = 0; i < name.length; i++) {
         hash = name.charCodeAt(i) + ((hash << 5) - hash);
@@ -216,13 +201,6 @@
       return colors[Math.abs(hash) % colors.length];
     }
 
-    /**
-     * Create avatar HTML element with fallback system
-     * @param {Object} user - User object with fullName, avatarUrl
-     * @param {string} cssClasses - CSS classes for the avatar container
-     * @param {string} imgClasses - Additional CSS classes for the img element
-     * @returns {string} - HTML string for avatar
-     */
     function createAvatarHTML(user, cssClasses = 'w-10 h-10', imgClasses = '') {
       const userName = user.fullName || user.username || user.name || 'Unknown User';
       const initials = generateInitials(userName);
@@ -230,7 +208,6 @@
       const avatarId = `avatar-${Math.random().toString(36).substr(2, 9)}`;
       
       if (user.avatarUrl && user.avatarUrl.trim()) {
-        // User has avatar URL - show image with fallback to initials
         return `
           <div class="relative ${cssClasses} rounded-full overflow-hidden flex-shrink-0">
             <img 
@@ -248,7 +225,6 @@
           </div>
         `;
       } else {
-        // No avatar URL - show initials directly
         return `
           <div class="${cssClasses} ${colorClass} rounded-full text-white flex items-center justify-center font-semibold text-sm flex-shrink-0">
             ${initials}
@@ -285,14 +261,12 @@
     openSidebar && openSidebar.addEventListener('click', showSidebar);
     closeSidebar && closeSidebar.addEventListener('click', hideSidebar);
     sidebarOverlay && sidebarOverlay.addEventListener('click', hideSidebar);
-    // Hide sidebar on resize to desktop
     window.addEventListener('resize', () => {
       if (window.innerWidth >= 768) {
         hideSidebar();
       }
     });
 
-    // Load room members
     async function loadRoomMembers() {
       if (!roomId) {
         console.error('No room ID found in URL');
@@ -329,10 +303,8 @@
         return;
       }
 
-      // Update header with member count
       membersHeader.textContent = `MEMBERS (${members.length})`;
 
-      // Render member list with avatars
       membersList.innerHTML = members.map(member => {
         const isInstructor = member.role === 'instructor';
         const statusColor = member.isActive ? 'bg-green-500' : 'bg-gray-300';
@@ -354,7 +326,6 @@
       }).join('');
     }
 
-    // Navigation function for admin dashboard
     async function goToAdminDashboard() {
       if (!roomId) {
         alert('Room ID not found. Please reload this page with a valid room URL.');
@@ -364,7 +335,6 @@
       console.log('Checking admin access for room:', roomId);
 
       try {
-        // Check if user is an instructor in this room
         const response = await fetch(`${API_BASE}/rooms/${roomId}/check-role`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -377,7 +347,6 @@
         console.log('Role check result:', roleData);
         
         if (roleData.isInstructor) {
-          // User is an instructor, allow access to admin dashboard
           console.log('Access granted - user is instructor');
           window.location.href = `admin-dashboard.html?id=${roomId}`;
         } else {

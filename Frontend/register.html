@@ -84,10 +84,8 @@
   </main>
 
   <script>
-    // API Base URL - Change this to your backend URL
     const API_BASE = 'http://localhost:3000';
     
-    // Get form elements
     const registerForm = document.getElementById('registerForm');
     const errorMessage = document.getElementById('errorMessage');
     const errorText = document.getElementById('errorText');
@@ -96,12 +94,10 @@
     const loadingMessage = document.getElementById('loadingMessage');
     const registerButton = document.getElementById('registerButton');
     
-    // Check if user is already logged in
     if (localStorage.getItem('token')) {
       window.location.href = 'dashboard.html';
     }
     
-    // Show error message
     function showError(message) {
       errorText.textContent = message;
       errorMessage.classList.remove('hidden');
@@ -110,7 +106,6 @@
       registerButton.disabled = false;
     }
     
-    // Show success message
     function showSuccess(message) {
       successText.textContent = message;
       successMessage.classList.remove('hidden');
@@ -119,26 +114,22 @@
       registerButton.disabled = false;
     }
     
-    // Hide messages
     function hideMessages() {
       errorMessage.classList.add('hidden');
       successMessage.classList.add('hidden');
     }
     
-    // Show loading state
     function showLoading() {
       hideMessages();
       loadingMessage.classList.remove('hidden');
       registerButton.disabled = true;
     }
     
-    // Hide loading state
     function hideLoading() {
       loadingMessage.classList.add('hidden');
       registerButton.disabled = false;
     }
     
-    // Validate form data
     function validateForm(formData) {
       const fullName = formData.get('fullname').trim();
       const email = formData.get('email').trim();
@@ -159,13 +150,11 @@
         return 'Passwords do not match';
       }
       
-      // Email validation
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(email)) {
         return 'Please enter a valid email address';
       }
       
-      // Username validation (alphanumeric and underscores only)
       const usernameRegex = /^[a-zA-Z0-9_]+$/;
       if (!usernameRegex.test(username)) {
         return 'Username can only contain letters, numbers, and underscores';
@@ -175,16 +164,14 @@
         return 'Username must be at least 3 characters long';
       }
       
-      return null; // No errors
+      return null;
     }
     
-    // Handle form submission
     registerForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       
       const formData = new FormData(registerForm);
       
-      // Validate form
       const validationError = validateForm(formData);
       if (validationError) {
         showError(validationError);
@@ -193,7 +180,6 @@
       
       showLoading();
       
-      // Prepare data for API
       const userData = {
         fullName: formData.get('fullname').trim(),
         email: formData.get('email').trim(),
@@ -217,12 +203,10 @@
         if (response.ok) {
           showSuccess('Account created successfully! Redirecting to login...');
           
-          // Redirect to login page after 2 seconds
           setTimeout(() => {
             window.location.href = 'login.html';
           }, 2000);
         } else {
-          // Show error message
           showError(data.error || data.message || 'Registration failed. Please try again.');
         }
       } catch (error) {
@@ -233,7 +217,6 @@
       }
     });
     
-    // Real-time password confirmation validation
     document.getElementById('confirm').addEventListener('input', function() {
       const password = document.getElementById('password').value;
       const confirm = this.value;

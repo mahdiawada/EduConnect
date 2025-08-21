@@ -6,19 +6,11 @@
   <title>Room Admin Dashboard</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <script defer>
-    // API & State
     const API_BASE = 'http://localhost:3000';
     const token = localStorage.getItem('token');
     const urlParams = new URLSearchParams(window.location.search);
     const roomId = urlParams.get('id');
-
-    // ===== AVATAR UTILITY FUNCTIONS =====
     
-    /**
-     * Generate initials from a full name (Facebook style)
-     * @param {string} fullName - User's full name
-     * @returns {string} - Initials (max 2 characters)
-     */
     function generateInitials(fullName) {
       if (!fullName || typeof fullName !== 'string') {
         return '?';
@@ -29,15 +21,9 @@
       if (words.length === 0) return '?';
       if (words.length === 1) return words[0].charAt(0).toUpperCase();
       
-      // Take first letter of first and last word
       return (words[0].charAt(0) + words[words.length - 1].charAt(0)).toUpperCase();
     }
 
-    /**
-     * Generate a background color based on user name (consistent colors)
-     * @param {string} name - User's name
-     * @returns {string} - CSS background color class
-     */
     function generateAvatarColor(name) {
       const colors = [
         'bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-pink-500', 
@@ -47,7 +33,6 @@
       
       if (!name) return 'bg-gray-500';
       
-      // Generate consistent color based on name hash
       let hash = 0;
       for (let i = 0; i < name.length; i++) {
         hash = name.charCodeAt(i) + ((hash << 5) - hash);
@@ -55,13 +40,6 @@
       return colors[Math.abs(hash) % colors.length];
     }
 
-    /**
-     * Create avatar HTML element with fallback system
-     * @param {Object} user - User object with fullName, avatarUrl
-     * @param {string} cssClasses - CSS classes for the avatar container
-     * @param {string} imgClasses - Additional CSS classes for the img element
-     * @returns {string} - HTML string for avatar
-     */
     function createAvatarHTML(user, cssClasses = 'w-10 h-10', imgClasses = '') {
       const userName = user.fullName || user.username || user.name || 'Unknown User';
       const initials = generateInitials(userName);
@@ -69,7 +47,6 @@
       const avatarId = `avatar-${Math.random().toString(36).substr(2, 9)}`;
       
       if (user.avatarUrl && user.avatarUrl.trim()) {
-        // User has avatar URL - show image with fallback to initials
         return `
           <div class="relative ${cssClasses} rounded-full overflow-hidden flex-shrink-0">
             <img 
@@ -87,7 +64,6 @@
           </div>
         `;
       } else {
-        // No avatar URL - show initials directly
         return `
           <div class="${cssClasses} ${colorClass} rounded-full text-white flex items-center justify-center font-semibold text-sm flex-shrink-0">
             ${initials}
@@ -96,11 +72,6 @@
       }
     }
 
-    // ===== END AVATAR UTILITIES =====
-
-    // ===== STATISTICS FUNCTIONS =====
-
-    // Load room statistics
     async function loadRoomStatistics() {
       if (!roomId) {
         console.error('No room ID available for statistics');
@@ -108,7 +79,6 @@
       }
 
       try {
-        // Load room details
         const roomResponse = await fetch(`${API_BASE}/rooms/${roomId}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -117,12 +87,10 @@
           const room = await roomResponse.json();
           document.getElementById('header-room-name').textContent = room.name;
           
-          // Format creation date
           const createdDate = new Date(room.createdAt).toLocaleDateString();
           document.getElementById('roomCreatedDate').textContent = createdDate;
         }
 
-        // Load member count
         const membersResponse = await fetch(`${API_BASE}/rooms/${roomId}/members`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -132,7 +100,6 @@
           document.getElementById('totalMembers').textContent = members.length;
         }
 
-        // Load chats count and total messages
         const chatsResponse = await fetch(`${API_BASE}/chats/room/${roomId}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -141,7 +108,6 @@
           const chats = await chatsResponse.json();
           document.getElementById('totalChats').textContent = chats.length;
 
-          // Count total messages across all chats
           let totalMessageCount = 0;
           for (const chat of chats) {
             try {
@@ -161,7 +127,6 @@
 
       } catch (error) {
         console.error('Error loading room statistics:', error);
-        // Set error indicators
         document.getElementById('totalMembers').textContent = '?';
         document.getElementById('totalChats').textContent = '?';
         document.getElementById('totalMessages').textContent = '?';
@@ -170,16 +135,12 @@
       }
     }
 
-    // ===== END STATISTICS =====
-
-    // Tab switching
     function showTab(tab) {
       document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
       document.getElementById(tab).classList.remove('hidden');
       document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('bg-white', 'font-bold'));
       document.getElementById(tab + '-btn').classList.add('bg-white', 'font-bold');
       
-      // Load data when switching tabs
       if (tab === 'chats') {
         loadChats();
       } else if (tab === 'members') {
@@ -189,9 +150,7 @@
       }
     }
 
-    // Initialize the admin dashboard
     async function initializeAdminDashboard() {
-      // Check if user has permission to access admin dashboard
       if (!roomId) {
         alert('Room ID not found. Please access this page through a valid room.');
         window.location.href = 'dashboard.html';
@@ -199,7 +158,6 @@
       }
 
       try {
-        // Check if user is an instructor in this room
         const response = await fetch(`${API_BASE}/rooms/${roomId}/check-role`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -211,22 +169,19 @@
         const roleData = await response.json();
         
         if (!roleData.isInstructor) {
-          // User is not an instructor, redirect to dashboard
           alert('Access Denied: Only instructors can access the admin dashboard.');
           window.location.href = 'dashboard.html';
           return;
         }
 
-        // User is authorized, proceed with initialization
         loadRoomStatistics();
-        showTab('members'); // Default to members tab
+        showTab('members');
       } catch (error) {
         console.error('Error checking user role:', error);
         alert('Error checking permissions. Redirecting to dashboard.');
         window.location.href = 'dashboard.html';
       }
     }
-    // Kick modal
     let memberToKick = null;
     let memberToKickId = null;
     function openKickModal(name, memberId) {
@@ -254,8 +209,8 @@
         
         if (response.ok) {
           closeKickModal();
-          loadMembers(); // Refresh the members list
-          loadRoomStatistics(); // Refresh statistics
+          loadMembers();
+          loadRoomStatistics();
         } else {
           throw new Error(`Failed to remove member: ${response.status}`);
         }
@@ -264,7 +219,6 @@
         alert(`Error removing member: ${error.message}`);
       }
     }
-    // Group chat modal
     function openGroupChatModal() {
       document.getElementById('group-chat-modal').classList.remove('hidden');
     }
@@ -299,9 +253,9 @@
 
         if (response.ok) {
           closeGroupChatModal();
-          loadChats(); // Refresh chat list
-          loadRoomStatistics(); // Refresh statistics
-          document.getElementById('group-chat-name').value = ''; // Clear form
+          loadChats();
+          loadRoomStatistics();
+          document.getElementById('group-chat-name').value = '';
         } else {
           throw new Error(`Failed to create chat group: ${response.status}`);
         }
@@ -310,8 +264,6 @@
         alert(`Error creating chat group: ${error.message}`);
       }
     }
-    
-    // Chat Management Functions
     async function loadChats() {
       const chatTableBody = document.querySelector('#chats tbody');
       
@@ -350,16 +302,16 @@
       
       chatTableBody.innerHTML = chats.map(chat => `
         <tr class="border-b">
-          <td class="py-2 font-semibold">${chat.name}</td>
-          <td>${new Date(chat.createdAt).toLocaleDateString()}</td>
-          <td>
+          <td class="py-2 px-2 font-semibold truncate">${chat.name}</td>
+          <td class="py-2 px-2 whitespace-nowrap">${new Date(chat.createdAt).toLocaleDateString()}</td>
+          <td class="py-2 px-2">
             <button onclick="openEditChatModal('${chat.id}', '${chat.name}')" class="text-blue-500 hover:text-blue-700" title="Edit">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
               </svg>
             </button>
           </td>
-          <td>
+          <td class="py-2 px-2">
             <button onclick="deleteChatGroup('${chat.id}', '${chat.name}')" class="text-red-500 hover:text-red-700" title="Delete">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -447,8 +399,8 @@
         }
         
         closeEditChatModal();
-        loadChats(); // Refresh the chat list
-        loadRoomStatistics(); // Refresh statistics
+        loadChats();
+        loadRoomStatistics();
       } catch (error) {
         console.error('Error updating chat:', error);
         alert(`Error updating chat group: ${error.message}`);
@@ -470,28 +422,23 @@
           throw new Error(`Failed to delete chat group: ${response.status}`);
         }
         
-        loadChats(); // Refresh the chat list
-        loadRoomStatistics(); // Refresh statistics
+        loadChats();
+        loadRoomStatistics();
       } catch (error) {
         console.error('Error deleting chat:', error);
         alert(`Error deleting chat group: ${error.message}`);
       }
     }
     
-    // Navigation function to go back to room
     function goBackToRoom() {
       if (roomId) {
         window.location.href = `room.html?id=${roomId}`;
       } else {
-        // Fallback to dashboard if no room ID
         window.location.href = 'dashboard.html';
       }
     }
 
-    // Initialize the admin dashboard when page loads
     document.addEventListener('DOMContentLoaded', initializeAdminDashboard);
-    
-    // Load room members
     async function loadMembers() {
       const membersTableBody = document.querySelector('#members tbody');
       
@@ -528,39 +475,38 @@
         return;
       }
       
-      // Update member count in stats (handled by loadRoomStatistics now)
       document.getElementById('totalMembers').textContent = members.length;
       
       membersTableBody.innerHTML = members.map(member => {
         const isInstructor = member.role === 'instructor';
         const joinDate = new Date(member.joinedAt).toLocaleDateString();
-        const lastActive = 'Recently'; // We can enhance this later with real last activity tracking
+        const lastActive = 'Recently';
         const status = member.isActive ? 'Active' : 'Inactive';
         
         const avatarHTML = createAvatarHTML(member, 'h-8 w-8');
         
         return `
           <tr class="border-b">
-            <td class="py-3 flex items-center gap-3">
+            <td class="py-3 px-2 flex items-center gap-3">
               ${avatarHTML}
-              <div>
-                <div class="font-bold text-gray-900">${member.fullName}</div>
-                <div class="text-xs text-gray-500">${member.email}</div>
+              <div class="min-w-0 flex-1">
+                <div class="font-bold text-gray-900 truncate">${member.fullName}</div>
+                <div class="text-xs text-gray-500 truncate">${member.email}</div>
               </div>
             </td>
-            <td>
-              <span class="bg-gray-100 px-2 py-1 rounded text-xs font-semibold">
+            <td class="py-3 px-2">
+              <span class="bg-gray-100 px-2 py-1 rounded text-xs font-semibold whitespace-nowrap">
                 ${isInstructor ? 'Admin' : 'Student'}
               </span>
             </td>
-            <td class="text-sm text-gray-600">${joinDate}</td>
-            <td class="text-sm text-gray-600">${lastActive}</td>
-            <td>
-              <span class="px-2 py-1 rounded text-xs ${status === 'Active' ? 'bg-black text-white' : 'bg-gray-100 text-gray-700'}">
+            <td class="py-3 px-2 text-sm text-gray-600 whitespace-nowrap">${joinDate}</td>
+            <td class="py-3 px-2 text-sm text-gray-600 whitespace-nowrap">${lastActive}</td>
+            <td class="py-3 px-2">
+              <span class="px-2 py-1 rounded text-xs whitespace-nowrap ${status === 'Active' ? 'bg-black text-white' : 'bg-gray-100 text-gray-700'}">
                 ${status}
               </span>
             </td>
-            <td>
+            <td class="py-3 px-2">
               ${!isInstructor ? `
                 <button onclick="openKickModal('${member.fullName}', '${member.id}')" class="text-red-500 hover:text-red-700" title="Kick">
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -601,7 +547,6 @@
       }
     }
 
-    // Save room settings
     async function saveRoomSettings() {
       if (!roomId) {
         alert('No room ID found. Please access this page with the correct room ID.');
@@ -631,7 +576,6 @@
         
         if (response.ok) {
           alert('Room settings updated successfully!');
-          // Update the header room name
           document.getElementById('header-room-name').textContent = roomName;
         } else {
           throw new Error(`Failed to update room settings: ${response.status}`);
@@ -642,7 +586,6 @@
       }
     }
 
-    // Load room info for header
     async function loadRoomInfo() {
       if (!roomId) {
         document.getElementById('header-room-name').textContent = 'No room selected';
@@ -666,7 +609,6 @@
       }
     }
 
-    // Email Invite Function
     async function sendInvite() {
         const emailInput = document.getElementById('invite-email');
         const email = emailInput.value.trim();
@@ -682,7 +624,6 @@
             return;
         }
 
-        // Show loading state
         const originalText = inviteButton.innerHTML;
         inviteButton.innerHTML = '<svg class="animate-spin h-5 w-5 mr-2" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Sending...';
         inviteButton.disabled = true;
@@ -707,7 +648,7 @@
 
             if (response.ok) {
                 alert(`🎉 Invitation sent successfully to ${email}!`);
-                emailInput.value = ''; // Clear the input
+                emailInput.value = '';
             } else {
                 const errorData = await response.json();
                 alert(`❌ Failed to send invitation: ${errorData.message || 'Unknown error'}`);
@@ -716,25 +657,21 @@
             console.error('Error sending invitation:', error);
             alert('❌ An error occurred while sending the invitation. Please try again.');
         } finally {
-            // Restore button state
             inviteButton.innerHTML = originalText;
             inviteButton.disabled = false;
         }
     }
 
-    // Email validation helper function
     function validateEmail(email) {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         return emailRegex.test(email);
     }
 
-    // Get room ID from URL parameters
     function getRoomIdFromUrl() {
         const urlParams = new URLSearchParams(window.location.search);
         return urlParams.get('id');
     }
 
-    // On load, show Members tab and load members
     window.onload = () => {
       showTab('members');
       loadMembers();
@@ -781,12 +718,11 @@
     </div>
     <!-- Members Tab -->
     <div id="members" class="tab-content bg-white rounded-b shadow p-4">
-      <div class="mb-4 flex justify-between items-center">
+      <div class="mb-4">
         <div>
           <h2 class="text-xl font-bold">Member Management</h2>
           <p class="text-gray-500 text-sm">Manage your room members, send invitations, and control access.</p>
         </div>
-        <button onclick="openGroupChatModal()" class="bg-black text-white px-4 py-2 rounded flex items-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg> Create Group Chat</button>
       </div>
       <div class="mb-4 flex gap-2">
         <input id="invite-email" type="email" placeholder="Enter email address to invite" class="border rounded px-3 py-2 flex-1" onkeypress="if(event.key==='Enter') sendInvite()" />
@@ -795,21 +731,23 @@
       <div class="mb-4">
         <input type="text" placeholder="Search members..." class="border rounded px-3 py-2 w-full" />
       </div>
-      <table class="w-full text-left">
-        <thead>
-          <tr class="border-b">
-            <th class="py-2">Member</th>
-            <th>Role</th>
-            <th>Join Date</th>
-            <th>Last Active</th>
-            <th>Status</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr><td colspan="6" class="py-4 text-center text-gray-500">Loading members...</td></tr>
-        </tbody>
-      </table>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left min-w-full">
+          <thead>
+            <tr class="border-b">
+              <th class="py-2 px-2">Member</th>
+              <th class="py-2 px-2">Role</th>
+              <th class="py-2 px-2">Join Date</th>
+              <th class="py-2 px-2">Last Active</th>
+              <th class="py-2 px-2">Status</th>
+              <th class="py-2 px-2"></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td colspan="6" class="py-4 text-center text-gray-500">Loading members...</td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
     <!-- Chat Management Tab -->
     <div id="chats" class="tab-content bg-white rounded-b shadow p-4 hidden">
@@ -828,19 +766,21 @@
       
       <!-- Chat List -->
       <div class="mb-4">
-        <table class="w-full text-left">
-          <thead>
-            <tr class="border-b">
-              <th class="py-2">Chat Name</th>
-              <th>Created Date</th>
-              <th>Edit</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr><td colspan="4" class="py-4 text-center text-gray-500">Loading chats...</td></tr>
-          </tbody>
-        </table>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left min-w-full">
+            <thead>
+              <tr class="border-b">
+                <th class="py-2 px-2">Chat Name</th>
+                <th class="py-2 px-2">Created Date</th>
+                <th class="py-2 px-2">Edit</th>
+                <th class="py-2 px-2">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td colspan="4" class="py-4 text-center text-gray-500">Loading chats...</td></tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
     <!-- Settings Tab -->
