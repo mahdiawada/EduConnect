@@ -24,6 +24,7 @@ Video Meeting Functionality: I used simple Jitsi API
 ![User Dashboard Page](./screenshots/user_dashboard1.png)
 ![User Dashboard Page](./screenshots/user_dashboard3.png)
 ![Room Page](./screenshots/room.png)
+![Admin Dashboard Page](./screenshots/admin-dashboard.png)
 
 
 ## Conclusion
